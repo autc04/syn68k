@@ -1,3 +1,9 @@
+=======================================================================
+Linux 32bit note:
+To build a 32bit Syn68k on a 64bit linux:
+
+CC='gcc -m32' SYN68K_CFLAGS='-O2 -fno-PIC -fomit-frame-pointer' ./configure  --build=i686-pc-linux
+
 ========================================================================
 Mac OS X 10.6 (Snow Leopard) note:  by default gcc now creates 64-bit
 binaries, which means the version of Syn68k that will be built won't work
