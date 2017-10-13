@@ -4,6 +4,11 @@
 #include <stdint.h>
 #include <setjmp.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /* Decide whether we are big or little endian here.  Add more machines as
  * they are supported.
  */
@@ -677,5 +682,9 @@ extern unsigned long destroy_blocks_with_checksum_mismatch
 #endif
 
 extern void m68kaddr (const uint16 *pc);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* Not _syn68k_public_h_ */
