@@ -143,7 +143,7 @@ generate_block (Block *parent, uint32 m68k_address, Block **new
     for (i = 0, cc_needed_by_children = 0; i < b->num_children; i++)
       {
 	if (tbi.child[i] != m68k_address)
-	  cc_needed_by_children |= generate_block (b, US_TO_SYN68K (tbi.child[i]),
+	  cc_needed_by_children |= generate_block (b, tbi.child[i],
 						   &b->child[i],
 						   try_native_p);
 	else

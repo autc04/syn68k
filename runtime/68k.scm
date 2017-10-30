@@ -4403,8 +4403,8 @@
   (list "-----" "-----" dont_expand
 	(native_code "xlate_bsr")
 	(list
-	 (jsr_common (call "US_TO_SYN68K" (call "READUL_UNSWAPPED_US" 
-						    (+ code 2))))
+	 (jsr_common (call "READUL_UNSWAPPED_US" 
+						    (+ code 2)))
 	 $1.sl)))  ; hack to give native code an a7
 
 (defopcode jsr_absw

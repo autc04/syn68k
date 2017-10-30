@@ -126,22 +126,22 @@ determine_next_block_addresses (const uint16 *code, TempBlockInfo *temp,
     {
       uint32 t1, t2;
 
-      t1 = (uint32) (code + 1);
+      t1 = (uint32) US_TO_SYN68K(code + 1);
       /* Compute branch target. */
       if ((m68kop & 0xFF) == 0)
 	{
 	  t1 += READSW (US_TO_SYN68K (code + 1));
-	  t2 = (uint32) (code + 2);
+	  t2 = US_TO_SYN68K (code + 2);
 	}
       else if ((m68kop & 0xFF) == 0xFF)
 	{
 	  t1 += READSL (US_TO_SYN68K (code + 1));
-	  t2 = (uint32) (code + 3);
+	  t2 = (uint32) US_TO_SYN68K(code + 3);
 	}
       else
 	{
 	  t1 += ((int8 *)code)[1];
-	  t2 = (uint32) (code + 1);
+	  t2 = (uint32) US_TO_SYN68K(code + 1);
 	}
 
       /* Is it a bsr or bra?  If so, only one destination address.  In the
@@ -164,7 +164,7 @@ determine_next_block_addresses (const uint16 *code, TempBlockInfo *temp,
   /* Is it a dbcc? */
   if ((m68kop >> 12) == 5)
     {
-      temp->child[0] = (uint32) (code + 2);
+      temp->child[0] = (uint32) US_TO_SYN68K(code + 2);
 
       if ((m68kop >> 8) == 0x50)  /* dbt? */
 	{
@@ -172,7 +172,7 @@ determine_next_block_addresses (const uint16 *code, TempBlockInfo *temp,
 	  return;
 	}
 
-      temp->child[1] = ((int32 ) (code + 1)
+      temp->child[1] = ((int32 ) US_TO_SYN68K(code + 1)
 			+ READSW (US_TO_SYN68K (code + 1)));
       temp->num_child_blocks = 2;
       return;
@@ -182,26 +182,26 @@ determine_next_block_addresses (const uint16 *code, TempBlockInfo *temp,
     {
     case 0x4EF8: /* Is it a jmp _abs.w? */
       temp->child[0] = 
-	(uint32) SYN68K_TO_US (READSW (US_TO_SYN68K (code + 1)));
+	(uint32)  (READSW (US_TO_SYN68K (code + 1)));
       temp->num_child_blocks = 1;
       return;
     case 0x4EB8: /* Is it a jsr _abs.w? */
       temp->child[0] =
-	(uint32) SYN68K_TO_US (READSW (US_TO_SYN68K (code + 1)));
+	(uint32)  (READSW (US_TO_SYN68K (code + 1)));
       temp->num_child_blocks = 0;  /* Pretend we don't know the dest. */
       return;
     case 0x4EF9: /* Is it a jmp _abs.l? */
       temp->child[0] = 
-	(uint32) SYN68K_TO_US (READUL (US_TO_SYN68K (code + 1)));
+	(uint32)  (READUL (US_TO_SYN68K (code + 1)));
       temp->num_child_blocks = 1;
       return;
     case 0x4EB9: /* Is it a jsr _abs.l? */
       temp->child[0] = 
-	(uint32) SYN68K_TO_US (READUL (US_TO_SYN68K (code + 1)));
+	(uint32)  (READUL (US_TO_SYN68K (code + 1)));
       temp->num_child_blocks = 0;
       return;
     case 0x4EBA: /* Is it a pc-relative jsr? */
-      temp->child[0] = (uint32) ((READSW (US_TO_SYN68K (code + 1))
+      temp->child[0] = (uint32) US_TO_SYN68K((READSW (US_TO_SYN68K (code + 1))
 				  + code + 1));
       temp->num_child_blocks = 0;
       return;
@@ -210,7 +210,7 @@ determine_next_block_addresses (const uint16 *code, TempBlockInfo *temp,
   /* Strange, unknown block ender.  Probably something capable of trapping.
    * Assume that the subsequent instruction is the target.
    */
-  temp->child[0] = (uint32) (code + map->instruction_words);
+  temp->child[0] = (uint32) US_TO_SYN68K(code + map->instruction_words);
   temp->num_child_blocks = 1;
 }
 
