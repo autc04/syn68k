@@ -28,7 +28,11 @@ main (int argc, char *argv[])
   malloc_debug (31);   /* Just to be safe. */
 #endif
 
+#if SIZEOF_CHAR_P == 4
   ROMlib_offset = MEMORY_OFFSET;
+#else
+  ROMlib_offsets[0] = MEMORY_OFFSET;
+#endif
 
   /* Set up default values for command line switches. */
   test_only_non_cc_variants = 0;

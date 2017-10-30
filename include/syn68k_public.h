@@ -245,9 +245,35 @@ extern uint32 ROMlib_offset;
 
 #elif SIZEOF_CHAR_P == 8
 
+#if 0
 extern uint64 ROMlib_offset;
-#define SYN68K_TO_US(addr) ((uint16 *) ((uint64)(uint32)addr + ROMlib_offset)) /* uint16 * only the default. */
+#define SYN68K_TO_US(addr) ((uint16 *) ((int64)(int32)addr + ROMlib_offset)) /* uint16 * only the default. */
 #define US_TO_SYN68K(addr) ((uint32) ((long) (addr) - ROMlib_offset))
+
+#else
+
+#define OFFSET_TABLE_BITS 2
+#define OFFSET_TABLE_SIZE (1 << OFFSET_TABLE_BITS)
+extern uint64 ROMlib_offsets[OFFSET_TABLE_SIZE];
+#define SYN68K_TO_US(addr) ((uint16 *) ((uint64)(uint32)addr + ROMlib_offsets[((uint32)addr) >> (32-OFFSET_TABLE_BITS)]))
+
+//#define US_TO_SYN68K(addr) ((uint64)(addr) - ROMlib_offsets[0] <= 0xFFFFFFFF ? (uint64)(addr) - ROMlib_offsets[0] : US_TO_SYN68K_X(addr))
+
+#define US_TO_SYN68K(addr) (US_TO_SYN68K_FUN((uint64)(addr)))
+extern uint32_t US_TO_SYN68K_FUN(uint64 addr);
+
+/*static inline uint32 US_TO_SYN68K_FUN(uint64 addr)
+{
+    uint64 iaddr = (uint64) addr;
+    for(int i = 0; i < OFFSET_TABLE_SIZE; i++)
+    {
+        if(iaddr - ROMlib_offsets[i] <= 0xFFFFFFFF)
+		return iaddr - ROMlib_offsets[i];
+    }
+    return 0;
+}*/
+
+#endif
 
 #else
 #error "SIZEOF_CHAR_P unknown"
@@ -258,7 +284,7 @@ extern uint64 ROMlib_offset;
 	the address 0 as 0 */
 
 #define SYN68K_TO_US_CHECK0(addr) ({ typeof(addr) t; t = addr; t ? SYN68K_TO_US(t) : (uint16 *) 0; })
-#define US_TO_SYN68K_CHECK0(addr) ({ typeof(addr) t; t = addr; t ? US_TO_SYN68K(t) : (int32) 0; })
+#define US_TO_SYN68K_CHECK0(addr) ({ typeof(addr) t; t = addr; t ? US_TO_SYN68K(t) : (uint32) 0; })
 
 /* Macros for byte swapping + specifying signedness.  On a big endian
  * machine, these macros are dummies and don't actually swap bytes.

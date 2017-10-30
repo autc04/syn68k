@@ -26,7 +26,7 @@ CPUState cpu_state;
 #if SIZEOF_CHAR_P == 4
 uint32 ROMlib_offset;
 #else
-uint64 ROMlib_offset;
+uint64 ROMlib_offsets[OFFSET_TABLE_SIZE];
 #endif
 
 /* This function initializes syn68k.  Call it exactly once, before any
@@ -115,12 +115,12 @@ initialize_68k_emulator (void (*while_busy)(int), int native_p,
   generate_block (NULL, US_TO_SYN68K (&rte), &b, TRUE);
 #else
   {
-    typeof (ROMlib_offset) save_offset;
+    typeof (ROMlib_offsets[0]) save_offset;
 
-    save_offset = ROMlib_offset;
-    ROMlib_offset = &rte; /* so the RTE will be reachable with 32 bit addr */
+    save_offset = ROMlib_offsets[0];
+    ROMlib_offsets[0] = (uint64)&rte; /* so the RTE will be reachable with 32 bit addr */
     generate_block (NULL, US_TO_SYN68K (&rte), &b, TRUE);
-    ROMlib_offset = save_offset;
+    ROMlib_offsets[0] = save_offset;
   }
 #endif
   assert (b != NULL);
@@ -133,4 +133,25 @@ initialize_68k_emulator (void (*while_busy)(int), int native_p,
   b->immortal = TRUE;
   hash_insert (b);
   range_tree_insert (b);
+}
+
+
+uint32_t US_TO_SYN68K_FUN(uint64 addr)
+{
+  uint64 iaddr = (uint64) addr;
+  for(uint32_t i = 0; i < OFFSET_TABLE_SIZE; i++)
+  {
+    if(ROMlib_offsets[i] == 0)
+    {
+      ROMlib_offsets[i] = iaddr - 0x10000000 - (i << 30);
+      printf("Assigned address %lx to address space %x\n", (unsigned long) addr, (int) i);
+    }
+    uint64_t offset = ROMlib_offsets[i] + (i << 30);
+    if(iaddr - offset <= 0x3FFFFFFF)
+      return (iaddr - ROMlib_offsets[i]);
+  }
+  {
+    printf("Could not convert address: %lx\n", (unsigned long) addr);
+  }
+  return 0;
 }
