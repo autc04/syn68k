@@ -313,7 +313,7 @@ extern void abort (void);
  * arrays of structs on the i386.
  */
 #ifndef offsetof
-# define offsetof(s, t) ((int) &((s *) 0)->t)
+# define offsetof(s, t) ((int)(intptr_t) &((s *) 0)->t)
 #endif
 
 #define GENERAL_REGISTER_SB(reg) \
