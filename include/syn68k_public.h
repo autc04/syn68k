@@ -261,6 +261,7 @@ extern uint32 ROMlib_offset;
 #define OFFSET_TABLE_BITS 2
 #define OFFSET_TABLE_SIZE (1 << OFFSET_TABLE_BITS)
 extern uint64 ROMlib_offsets[OFFSET_TABLE_SIZE];
+extern uint64 ROMlib_sizes[OFFSET_TABLE_SIZE];
 
 #define ROMlib_offset (ROMlib_offsets[0])
 

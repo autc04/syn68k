@@ -27,6 +27,7 @@ CPUState cpu_state;
 uint32 ROMlib_offset;
 #else
 uint64 ROMlib_offsets[OFFSET_TABLE_SIZE];
+uint64 ROMlib_sizes[OFFSET_TABLE_SIZE] = {0x3FFFFFFF, 0x3FFFFFFF, 0x3FFFFFFF, 0x3FFFFFFF};
 #endif
 
 /* This function initializes syn68k.  Call it exactly once, before any
@@ -144,10 +145,11 @@ uint32_t US_TO_SYN68K_FUN(uint64 addr)
     if(ROMlib_offsets[i] == 0)
     {
       ROMlib_offsets[i] = iaddr - 0x10000000 - (i << 30);
+      ROMlib_sizes[i] = 0x3FFFFFFF;
       printf("Assigned address %lx to address space %x\n", (unsigned long) addr, (int) i);
     }
     uint64_t offset = ROMlib_offsets[i] + (i << 30);
-    if(iaddr - offset <= 0x3FFFFFFF)
+    if(iaddr - offset <= ROMlib_sizes[i])
       return (iaddr - ROMlib_offsets[i]);
   }
   {
