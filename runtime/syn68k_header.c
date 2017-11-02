@@ -206,10 +206,9 @@ static void next_instruction_hook(const void *vp)
 #endif
 
 # define CASE(n) \
-void \
-s68k_handle_opcode_ ## n () \
-{ \
+  S68K_HANDLE_ ## n: \
   asm volatile ("\n_S68K_HANDLE_" #n ":"); \
+  { \
   FREQUENCY (n);
 # define CASE_PREAMBLE(name,bits,ms,mns,n) {
 extern void s68k_handle_opcode_dummy (void);
@@ -441,10 +440,20 @@ static const uint8 neg_bcd_table[16] = {
 
 static void threaded_gateway (void) NOINLINE;
 
+void
+interpret_code1 (const uint16 *start_code, void ***out_dispatch_table);
 
 void
 interpret_code (const uint16 *start_code)
 {
+	interpret_code1(start_code, NULL); 
+}
+
+void
+interpret_code1 (const uint16 *start_code, void ***out_dispatch_table)
+{
+	if(out_dispatch_table)
+	  goto return_dispatch_table;
   jmp_buf setjmp_buf;
   syn68k_addr_t  saved_amode_p, saved_reversed_amode_p;  /* Used in interpreter. */
   jmp_buf *saved_setjmp_buf;
@@ -614,8 +623,9 @@ interpret_code (const uint16 *start_code)
  main_loop:
 #ifdef USE_DIRECT_DISPATCH
   cpu_state.setjmp_buf = &setjmp_buf;
-  if (!setjmp (setjmp_buf))
-    threaded_gateway ();
+	if (!setjmp (setjmp_buf))
+	  NEXT_INSTRUCTION (ROUND_UP (PTR_WORDS));
+  //  threaded_gateway ();
 
   SAVE_CPU_STATE ();
 
@@ -633,7 +643,7 @@ interpret_code (const uint16 *start_code)
 #if defined (i386) && !defined (__CHECKER__)
   cpu_state_ptr              = saved_cpu_state_ptr;
 #endif
-}
+  return;
 #else
 
   while (1)

@@ -112,13 +112,36 @@ done_generating_code ()
     {
       long i, max_opcode = -1;
 
+
+      /* Output references to the local labels so that they don't get optimized away. */
+			fputs("\n"
+			      "#ifdef USE_DIRECT_DISPATCH\n"
+						"    static void* handlers[] = {\n",
+					  syn68k_c_stream);
+		  for (i = 0; i < 65536; i++)
+      {
+        if (synthetic_opcode_taken[i] == OPCODE_TAKEN)
+          {
+            fprintf (syn68k_c_stream,
+                     "        &&S68K_HANDLE_0x%04lX,\n",
+                     (unsigned long) i, (unsigned long) i);
+          }
+			}
+			fputs("        0\n"
+						"    };\n"
+						"return_dispatch_table:\n"
+						"    *out_dispatch_table = handlers;\n"
+            "#endif\n",
+            syn68k_c_stream);
+
       /* Close up the main interpreter function. */
       fputs ("\n"
 	     "#ifndef USE_DIRECT_DISPATCH\n"
 	     "       }\n"
 	     "    }\n"
 	     "}\n"
-	     "#else\n"
+			 "#else\n"
+  	    "}\n"
 	     "/* This function is the gateway to the threaded code.\n"
 	     " * It allocates a bunch of space on the stack so that\n"
 	     " * (hopefully) there will be room for the stack slots in\n"
