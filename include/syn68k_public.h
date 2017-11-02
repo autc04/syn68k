@@ -255,23 +255,16 @@ extern uint64 ROMlib_offset;
 #define OFFSET_TABLE_BITS 2
 #define OFFSET_TABLE_SIZE (1 << OFFSET_TABLE_BITS)
 extern uint64 ROMlib_offsets[OFFSET_TABLE_SIZE];
-#define SYN68K_TO_US(addr) ((uint16 *) ((uint64)(uint32)addr + ROMlib_offsets[((uint32)addr) >> (32-OFFSET_TABLE_BITS)]))
 
-//#define US_TO_SYN68K(addr) ((uint64)(addr) - ROMlib_offsets[0] <= 0xFFFFFFFF ? (uint64)(addr) - ROMlib_offsets[0] : US_TO_SYN68K_X(addr))
+#define SYN68K_TO_US(addr) ({ \
+  uint32 _addr = addr; \
+  (uint16 *) ((uint64)_addr + ROMlib_offsets[_addr >> (32-OFFSET_TABLE_BITS)]); \
+})
 
+
+// TODO: inline something
 #define US_TO_SYN68K(addr) (US_TO_SYN68K_FUN((uint64)(addr)))
 extern uint32_t US_TO_SYN68K_FUN(uint64 addr);
-
-/*static inline uint32 US_TO_SYN68K_FUN(uint64 addr)
-{
-    uint64 iaddr = (uint64) addr;
-    for(int i = 0; i < OFFSET_TABLE_SIZE; i++)
-    {
-        if(iaddr - ROMlib_offsets[i] <= 0xFFFFFFFF)
-		return iaddr - ROMlib_offsets[i];
-    }
-    return 0;
-}*/
 
 #endif
 
