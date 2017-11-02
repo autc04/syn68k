@@ -1242,7 +1242,7 @@ make_artificial_block (Block *parent, syn68k_addr_t m68k_address,
 			       + extra_words,
 			       sizeof (uint16)))
 	  + PTR_WORDS);  /* Skip over prepended m68k address. */
-  WRITE_LONG (&code[-2], m68k_address);
+  WRITE_LONG (&code[-PTR_WORDS], m68k_address);
   b->compiled_code = code;
   b->checksum = compute_block_checksum (b);
 

@@ -181,7 +181,7 @@ TEST (lea_pc_ind_preix, ALL_CCS, 50, WONT_CHANGE_MEMORY, NO_LIMIT)
 
   /* Skip over array of addresses. */
   code[i] = 0x4EF9;  /* jmp absl */
-  WRITE4 (i + 1, (unsigned long) (code - (MEMORY_OFFSET / 2) + 50));
+  WRITE4 (i + 1, (unsigned long) (US_TO_SYN68K(code + 50)));
   
   for (i += 3; i < 49; i += 2)
     WRITE4 (i, randint (MEM + 50, MEMEND - 50));
@@ -235,7 +235,7 @@ TEST (lea_pc_ind_postix, ALL_CCS, 50, WONT_CHANGE_MEMORY, NO_LIMIT)
 
   /* Skip over array of addresses. */
   code[i] = 0x4EF9;  /* jmp absl */
-  WRITE4 (i + 1, (unsigned long) (code - (MEMORY_OFFSET / 2) + 50));
+  WRITE4 (i + 1, (unsigned long) (US_TO_SYN68K(code + 50)));
   
   for (i += 3; i < 49; i += 2)
     WRITE4 (i, randint (MEM + 100, MEMEND - 100));
@@ -289,7 +289,7 @@ TEST (moveb_pc_ind_preix_dreg, ALL_CCS, 50, WONT_CHANGE_MEMORY, NO_LIMIT)
 
   /* Skip over array of addresses. */
   code[i] = 0x4EF9;  /* jmp absl */
-  WRITE4 (i + 1, (unsigned long) (code - (MEMORY_OFFSET / 2) + 50));
+  WRITE4 (i + 1, (unsigned long) (US_TO_SYN68K(code + 50)));
   
   for (i += 3; i < 49; i += 2)
     WRITE4 (i, randint (MEM + 50, MEMEND - 50));
@@ -343,7 +343,7 @@ TEST (moveb_pc_ind_postix_dreg, ALL_CCS, 50, WONT_CHANGE_MEMORY, NO_LIMIT)
 
   /* Skip over array of addresses. */
   code[i] = 0x4EF9;  /* jmp absl */
-  WRITE4 (i + 1, (unsigned long) (code - (MEMORY_OFFSET / 2) + 50));
+  WRITE4 (i + 1, (unsigned long) (US_TO_SYN68K(code + 50)));
   
   for (i += 3; i < 49; i += 2)
     WRITE4 (i, randint (MEM + 100, MEMEND - 100));
@@ -560,7 +560,7 @@ TEST (lea_ind_preix, ALL_CCS, 50, WONT_CHANGE_MEMORY, NO_LIMIT)
 
   /* Skip over array of addresses. */
   code[i] = 0x4EF9;  /* jmp absl */
-  WRITE4 (i + 1, (unsigned long) (code - (MEMORY_OFFSET / 2) + 50));
+  WRITE4 (i + 1, (unsigned long) (US_TO_SYN68K(code + 50)));
   
   for (i += 3; i < 49; i += 2)
     WRITE4 (i, randint (MEM + 50, MEMEND - 50));
@@ -640,7 +640,7 @@ TEST (lea_ind_postix, ALL_CCS, 50, WONT_CHANGE_MEMORY, NO_LIMIT)
 
   /* Skip over array of addresses. */
   code[i] = 0x4EF9;  /* jmp absl */
-  WRITE4 (i + 1, (unsigned long) (code - (MEMORY_OFFSET / 2) + 50));
+  WRITE4 (i + 1, (unsigned long) (US_TO_SYN68K(code + 50)));
   
   for (i += 3; i < 49; i += 2)
     WRITE4 (i, randint (MEM + 50, MEMEND - 50));
