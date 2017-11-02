@@ -152,6 +152,7 @@ uint32_t US_TO_SYN68K_FUN(uint64 addr)
   }
   {
     printf("Could not convert address: %lx\n", (unsigned long) addr);
+    abort();
   }
   return 0;
 }
