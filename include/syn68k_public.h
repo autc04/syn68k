@@ -146,7 +146,7 @@ typedef struct {
 #if defined (MINIMAL_CPU_STATE)
   uint8 filler[3]; /* So we can copy small cpu states w/out boundary cruft. */
 #else /* !MINIMAL_CPU_STATE */
-  char *amode_p, *reversed_amode_p;  /* Used in interpreter. */
+  syn68k_addr_t amode_p, reversed_amode_p;  /* Used in interpreter. */
 #if !defined (USE_BIOS_TIMER) && defined (SYNCHRONOUS_INTERRUPTS)
   volatile int32 interrupt_status_changed; /* High bit set when interrupted. */
 #endif

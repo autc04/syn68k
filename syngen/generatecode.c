@@ -244,10 +244,10 @@ generate_code_for_list (List *ls, int m68kop, const ParsedOpcodeInfo *info,
 		   ls->cdr->token.u.derefinfo.sgnd ? 'S' : 'U');
 	  switch (ls->cdr->token.type) {
 	  case TOK_DOLLAR_AMODE:
-	    fputs ("US_TO_SYN68K (cpu_state.amode_p) ", syn68k_c_stream);
+	    fputs (" (cpu_state.amode_p) ", syn68k_c_stream);
 	    break;
 	  case TOK_DOLLAR_REVERSED_AMODE:
-	    fputs ("US_TO_SYN68K (cpu_state.reversed_amode_p) ",
+	    fputs (" (cpu_state.reversed_amode_p) ",
 		   syn68k_c_stream);
 	    break;
 	  case TOK_AMODE:
@@ -785,29 +785,29 @@ generate_code_for_list (List *ls, int m68kop, const ParsedOpcodeInfo *info,
      */
   case TOK_DOLLAR_AMODE:
     if (t->u.dollarinfo.size != 4)
-      fprintf (syn68k_c_stream, "DEREF(%s, cpu_state.amode_p) ",
+      fprintf (syn68k_c_stream, "DEREF(%s, SYN68K_TO_US(cpu_state.amode_p)) ",
 	       ctypes[t->u.dollarinfo.sgnd][t->u.dollarinfo.size]);
     else
-      fprintf (syn68k_c_stream, "READ%cL_UNSWAPPED ( US_TO_SYN68K (cpu_state.amode_p)) ",
+      fprintf (syn68k_c_stream, "READ%cL_UNSWAPPED ( (cpu_state.amode_p)) ",
 	       t->u.dollarinfo.sgnd ? 'S' : 'U');
     break;
 
   case TOK_DOLLAR_REVERSED_AMODE:
     if (t->u.dollarinfo.size != 4)
-      fprintf (syn68k_c_stream, "DEREF(%s, cpu_state.reversed_amode_p) ",
+      fprintf (syn68k_c_stream, "DEREF(%s, SYN68K_TO_US(cpu_state.reversed_amode_p)) ",
 	       ctypes[t->u.dollarinfo.sgnd][t->u.dollarinfo.size]);
     else
       fprintf (syn68k_c_stream,
-	       "READ%cL_UNSWAPPED ( US_TO_SYN68K (cpu_state.reversed_amode_p)) ",
+	       "READ%cL_UNSWAPPED ( (cpu_state.reversed_amode_p)) ",
 	       t->u.dollarinfo.sgnd ? 'S' : 'U');
     break;
 
   case TOK_DOLLAR_AMODE_PTR:
-    fprintf (syn68k_c_stream, "US_TO_SYN68K (cpu_state.amode_p) ");
+    fprintf (syn68k_c_stream, " (cpu_state.amode_p) ");
     break;
 
   case TOK_DOLLAR_REVERSED_AMODE_PTR:
-    fprintf (syn68k_c_stream, "US_TO_SYN68K (cpu_state.reversed_amode_p) ");
+    fprintf (syn68k_c_stream, " (cpu_state.reversed_amode_p) ");
     break;
 
   case TOK_DOLLAR_NUMBER:
@@ -1125,9 +1125,9 @@ output_c_for_amode_ptr (const Token *t, BOOL reversed)
   case 6:
   case 7:
     if (!reversed)
-      fprintf (syn68k_c_stream, "US_TO_SYN68K (cpu_state.amode_p) ");
+      fprintf (syn68k_c_stream, " (cpu_state.amode_p) ");
     else
-      fprintf (syn68k_c_stream, "US_TO_SYN68K (cpu_state.reversed_amode_p) ");
+      fprintf (syn68k_c_stream, " (cpu_state.reversed_amode_p) ");
     break;
   }
 }

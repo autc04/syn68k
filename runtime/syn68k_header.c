@@ -446,7 +446,7 @@ void
 interpret_code (const uint16 *start_code)
 {
   jmp_buf setjmp_buf;
-  char *saved_amode_p, *saved_reversed_amode_p;  /* Used in interpreter. */
+  syn68k_addr_t  saved_amode_p, saved_reversed_amode_p;  /* Used in interpreter. */
   jmp_buf *saved_setjmp_buf;
   const uint16 *saved_code;
 #if defined (i386) && !defined (__CHECKER__)
@@ -752,7 +752,7 @@ interpret_code (const uint16 *start_code)
       CASE (casenum) \
         CASE_PREAMBLE ("Reserved - compute " #p " for mode == 2/3, reg == " \
 		       #reg, "", "", "", "") \
-	p = (char *) SYN68K_TO_US (CLEAN (reg)); \
+	p = (CLEAN (reg)); \
 	IFDEBUG (printf ("\t" #p " == %p\n", p)); \
 	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS))
 
@@ -778,7 +778,7 @@ interpret_code (const uint16 *start_code)
       CASE (casenum) \
         CASE_PREAMBLE ("Reserved - compute " #p " for mode == 4, reg == " \
 		       #reg ", size == " #size, "", "", "", "") \
-	p = (char *) SYN68K_TO_US (CLEAN (reg - size)); \
+	p = (CLEAN (reg - size)); \
 	IFDEBUG (printf ("\t" #p " == %p\n", p)); \
 	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS))
 	
@@ -838,7 +838,7 @@ interpret_code (const uint16 *start_code)
       CASE (casenum) \
         CASE_PREAMBLE ("Reserved - compute " #p " for mode == 5, "\
 		       "reg == " #reg, "", "", "", "") \
-	p = (char *) SYN68K_TO_US (CLEAN (reg + (*(int32 *)code))); \
+	p = (CLEAN (reg + (*(int32 *)code))); \
 	IFDEBUG (printf ("\t" #p " == %p\n", p)); \
 	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS + 2))
 
@@ -864,7 +864,7 @@ interpret_code (const uint16 *start_code)
       CASE (0x0054)
 	CASE_PREAMBLE ("Reserved - compute cpu_state.amode_p for (xxx).W",
 		       "", "", "", "")
-	cpu_state.amode_p = (char *) SYN68K_TO_US (CLEAN (*(int32 *)code));
+	cpu_state.amode_p = (CLEAN (*(int32 *)code));
 #ifdef DEBUG
 	printf ("\tcpu_state.amode_p = %p\n", (void *) cpu_state.amode_p);
 #endif
@@ -873,7 +873,7 @@ interpret_code (const uint16 *start_code)
       CASE (0x0055)
 	CASE_PREAMBLE ("Reserved - compute cpu_state.reversed_amode_p for (xxx).W",
 		       "", "", "", "")
-	cpu_state.reversed_amode_p = (char *) SYN68K_TO_US (CLEAN (*(int32 *)code));
+	cpu_state.reversed_amode_p = (CLEAN (*(int32 *)code));
 #ifdef DEBUG
 	printf ("\tcpu_state.reversed_amode_p = %p\n", (void *) cpu_state.reversed_amode_p);
 #endif
@@ -882,7 +882,7 @@ interpret_code (const uint16 *start_code)
       CASE (0x0056)
 	CASE_PREAMBLE ("Reserved - compute cpu_state.amode_p for (xxx).L",
 		       "", "", "", "")
-	cpu_state.amode_p = (char *) *(signed char **)code;
+	cpu_state.amode_p = US_TO_SYN68K((char *) *(signed char **)code);
 #ifdef DEBUG
 	printf ("\tcpu_state.amode_p = %p\n", (void *) cpu_state.amode_p);
 #endif
@@ -891,7 +891,7 @@ interpret_code (const uint16 *start_code)
       CASE (0x0057)
 	CASE_PREAMBLE ("Reserved - compute cpu_state.reversed_amode_p for (xxx).L",
 		       "", "", "", "")
-	cpu_state.reversed_amode_p = (char *) *(signed char **)code;
+	cpu_state.reversed_amode_p = US_TO_SYN68K((char *) *(signed char **)code);
 #ifdef DEBUG
 	printf ("\tcpu_state.reversed_amode_p = %p\n",
 		(void *) cpu_state.reversed_amode_p);
@@ -902,9 +902,9 @@ interpret_code (const uint16 *start_code)
       CASE (casenum) \
 	CASE_PREAMBLE ("Reserved - compute " #p " for mode == 6, areg == " \
 		       #areg ", ixreg == " #ixreg, "", "", "", "") \
-	p = (char *) (CLEAN ((areg) + (((int32) (ixreg)) << \
+	p = (CLEAN ((areg) + (((int32) (ixreg)) << \
 				       *(uint32 *)(code + PTR_WORDS + 2)) \
-			     + *(signed char **)code)); \
+			     + US_TO_SYN68K(*(signed char **)code))); \
 	IFDEBUG (printf ("\t" #p " = %p\n", (void *) p)); \
 	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS + (size)))
 
@@ -993,7 +993,7 @@ interpret_code (const uint16 *start_code)
 	uint32 areg = ((flags & 0x80) ? 0
 		       : ADDRESS_REGISTER_UL (*(uint32 *)(code + 6)));
 	int32 index;
-	char *temp;
+	syn68k_addr_t temp;
 
 	if (flags & 0x40)  /* Index suppress? */
 	  index = 0;
@@ -1010,11 +1010,11 @@ interpret_code (const uint16 *start_code)
 	outer_displacement = ((int32 *)code)[1];
 
 	if (flags & 2)
-	  temp = (char *) SYN68K_TO_US (READSL (areg + base_displacement
+	  temp = (READSL (areg + base_displacement
 						+ index)
 					+ outer_displacement);
 	else
-	  temp = (char *) SYN68K_TO_US (READSL (areg + base_displacement)
+	  temp = (READSL (areg + base_displacement)
 					+ index + outer_displacement);
 
 	if (flags & 1)
