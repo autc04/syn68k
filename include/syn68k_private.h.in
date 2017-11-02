@@ -84,7 +84,8 @@
 
 
 #ifdef USE_DIRECT_DISPATCH
-extern const void *direct_dispatch_table[];
+extern const void **direct_dispatch_table;
+extern void init_dispatch_table();
 #endif
 
 

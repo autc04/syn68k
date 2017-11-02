@@ -113,10 +113,15 @@ done_generating_code ()
       long i, max_opcode = -1;
 
 
-      /* Output references to the local labels so that they don't get optimized away. */
+			/* Output the end of the interpreter function. */
+			
+			/* direct-dispatch case:
+					 output the dispatch table
+					 and code for returning it from the function.
+					 */
 			fputs("\n"
 			      "#ifdef USE_DIRECT_DISPATCH\n"
-						"    static void* handlers[] = {\n",
+						"    static const void* dispatch_table[] = {\n",
 					  syn68k_c_stream);
 		  for (i = 0; i < 65536; i++)
       {
@@ -124,82 +129,24 @@ done_generating_code ()
           {
             fprintf (syn68k_c_stream,
                      "        &&S68K_HANDLE_0x%04lX,\n",
-                     (unsigned long) i, (unsigned long) i);
+                     (unsigned long) i);
           }
 			}
 			fputs("        0\n"
 						"    };\n"
 						"return_dispatch_table:\n"
-						"    *out_dispatch_table = handlers;\n"
-            "#endif\n",
+						"    *out_dispatch_table = dispatch_table;\n"
+            "}\n",
             syn68k_c_stream);
 
-      /* Close up the main interpreter function. */
-      fputs ("\n"
-	     "#ifndef USE_DIRECT_DISPATCH\n"
+      /* Non-direct dispatch version: */
+      fputs (
+	     "#else\n"
 	     "       }\n"
 	     "    }\n"
 	     "}\n"
-			 "#else\n"
-  	    "}\n"
-	     "/* This function is the gateway to the threaded code.\n"
-	     " * It allocates a bunch of space on the stack so that\n"
-	     " * (hopefully) there will be room for the stack slots in\n"
-	     " * the functions it jumps into.  This is scary stuff,\n"
-	     " * but hopefully it will work.  We put this function at\n"
-	     " * the end of the file so it won't be inlined.\n"
-	     " * And use __attribute__((noinline)) where it's supported.\n"
-	     " */\n"
-	     "static void\n"
-	     "threaded_gateway (void)\n"
-	     "{\n"
-	     "volatile char buf[1024];  /* Allocate some stack space. */\n"
-	     "memset ((char *)buf, 0, 1);  /* Use the buffer in some way. */\n"
-	     "NEXT_INSTRUCTION (ROUND_UP (PTR_WORDS));\n"
-	     "}\n"
-	     "\n"
-	     "\n"
-	     "/* This array is used only by the compilation system. */\n",
+			 "#endif /* USE_DIRECT_DISPATCH */\n",
 	     syn68k_c_stream);
-
-      /* Output the decls for the dispatch table array. */
-      for (i = 0; i < 65536; i++)
-	{
-	  if (synthetic_opcode_taken[i] == OPCODE_TAKEN)
-	    {
-	      fprintf (syn68k_c_stream,
-		       "extern int handle_opc_0x%04lX "
-		       "asm (\"_S68K_HANDLE_0x%04lX\");\n",
-		       (unsigned long) i, (unsigned long) i);
-	      max_opcode = i;
-	    }
-	}
-
-      /* Output the beginning of the dispatch table array. */
-      if (max_opcode >= 0)
-	{
-	  fprintf (syn68k_c_stream,
-		   "\n"
-		   "\n"
-		   "const void *direct_dispatch_table[%ld] = {\n",
-		   max_opcode + 1);
-
-	  for (i = 0; i <= max_opcode; i++)
-	    {
-	      if (synthetic_opcode_taken[i] == OPCODE_TAKEN)
-		fprintf (syn68k_c_stream,
-			 "  (void *) &handle_opc_0x%04lX%s\n",
-			 (unsigned long) i,
-			 (i == max_opcode) ? "" : ",");
-	      else
-		fprintf (syn68k_c_stream, "  (void *) 0%s\n",
-			 (i == max_opcode) ? "" : ",");
-	    }
-	  
-	  fputs ("};\n", syn68k_c_stream);
-	}
-
-      fputs ("#endif  /* USE_DIRECT_DISPATCH */\n", syn68k_c_stream);
 
       /* Output opcode map. */
       if (verbose)

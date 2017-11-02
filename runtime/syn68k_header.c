@@ -206,7 +206,8 @@ static void next_instruction_hook(const void *vp)
 #endif
 
 # define CASE(n) \
-  S68K_HANDLE_ ## n: \
+	S68K_HANDLE_ ## n: \
+	/* the asm label is not needed, but slightly useful for debugging: */ \
   asm volatile ("\n_S68K_HANDLE_" #n ":"); \
   { \
   FREQUENCY (n);
@@ -440,8 +441,10 @@ static const uint8 neg_bcd_table[16] = {
 
 static void threaded_gateway (void) NOINLINE;
 
-void
-interpret_code1 (const uint16 *start_code, void ***out_dispatch_table);
+const void **direct_dispatch_table;
+
+static void
+interpret_code1 (const uint16 *start_code, const void ***out_dispatch_table);
 
 void
 interpret_code (const uint16 *start_code)
@@ -449,8 +452,13 @@ interpret_code (const uint16 *start_code)
 	interpret_code1(start_code, NULL); 
 }
 
-void
-interpret_code1 (const uint16 *start_code, void ***out_dispatch_table)
+void init_dispatch_table()
+{
+	interpret_code1(NULL, &direct_dispatch_table);
+}
+
+static void
+interpret_code1 (const uint16 *start_code, const void ***out_dispatch_table)
 {
 	if(out_dispatch_table)
 	  goto return_dispatch_table;

@@ -61,6 +61,10 @@ initialize_68k_emulator (void (*while_busy)(int), int native_p,
   /* Record the function to periodically call while we are busy doing stuff. */
   call_while_busy_func = while_busy;
 
+#ifdef USE_DIRECT_DISPATCH
+  init_dispatch_table();
+#endif
+
 #ifdef GENERATE_NATIVE_CODE
   native_code_p = native_p;
 #endif
