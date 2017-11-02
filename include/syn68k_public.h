@@ -245,16 +245,24 @@ extern uint32 ROMlib_offset;
 
 #elif SIZEOF_CHAR_P == 8
 
-#if 0
-extern uint64 ROMlib_offset;
-#define SYN68K_TO_US(addr) ((uint16 *) ((int64)(int32)addr + ROMlib_offset)) /* uint16 * only the default. */
-#define US_TO_SYN68K(addr) ((uint32) ((long) (addr) - ROMlib_offset))
-
-#else
+/**
+ * Executor uses not only a contiguous allocated block of 68K memory,
+ * but also passes addresses to local and global variables to the emulator
+ * and has a separately-allocated video memory buffer.
+ * 
+ * It is quite fragile to try to control the addresses of these things and put
+ * them all within a 32-bit range, so let's sacrifice some speed and map 68K
+ * memory into four separate blocks of 1 GB each.
+ * 
+ * Thus, we have ROMlib_offsets[] instead of ROMlib_offset, which is now defined
+ * as an alias for ROMlib_offsets[0].
+ */
 
 #define OFFSET_TABLE_BITS 2
 #define OFFSET_TABLE_SIZE (1 << OFFSET_TABLE_BITS)
 extern uint64 ROMlib_offsets[OFFSET_TABLE_SIZE];
+
+#define ROMlib_offset (ROMlib_offsets[0])
 
 #define SYN68K_TO_US(addr) ({ \
   uint32 _addr = addr; \
@@ -265,8 +273,6 @@ extern uint64 ROMlib_offsets[OFFSET_TABLE_SIZE];
 // TODO: inline something
 #define US_TO_SYN68K(addr) (US_TO_SYN68K_FUN((uint64)(addr)))
 extern uint32_t US_TO_SYN68K_FUN(uint64 addr);
-
-#endif
 
 #else
 #error "SIZEOF_CHAR_P unknown"
