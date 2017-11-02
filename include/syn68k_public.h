@@ -82,10 +82,9 @@ typedef uint64_t uint64;
 /* Typedef for address in 68k space. */
 typedef uint32 syn68k_addr_t;
 
-/* Integral type big enough to hold a pointer.  Presumably we'll need to use
- * unsigned long long on machines with 64 bit pointers.
+/* Integral type big enough to hold a pointer.
  */
-typedef unsigned long ptr_sized_uint;
+typedef uintptr_t ptr_sized_uint;
 
 /* Because a 68k register can be referenced as a byte, word, or int32,
  * we represent them as a union of these types.  Although not guaranteed
