@@ -43,14 +43,6 @@ esac
 
 AC_SUBST(host_cpu_class)
 
-# See lengthy explanation in runtime/Makefile.am for dce_fixup explanation
-
-if test x$host_cpu = xx86_64; then
-  dce_fixup=-fno-dce
-fi
-
-AC_SUBST(dce_fixup)
-
 AC_MSG_CHECKING([Syn68k C flags (TODO: FIXME)])
 SYN68K_CFLAGS="${SYN68K_CFLAGS--O2 -fomit-frame-pointer}"
 AC_MSG_RESULT([$SYN68K_CFLAGS])
@@ -80,21 +72,6 @@ AC_MSG_RESULT([$enable_native])
 
 AC_SUBST(NONNATIVE)
 AC_SUBST(HOST_NATIVE)
-
-# TODO: finish this
-AC_ARG_ENABLE([assembly-optimization],
-              AC_HELP_STRING([--enable-assembly-optimization],
-                             [reorder assembly instructions (x86 only; default is no]),
-              [], [enable_assembly_optimization=no])
-
-AC_MSG_CHECKING([assembly optimization])
-if test x$enable_assembly_optimization = xyes; then
-  assembly_optimization_script=./i486-optimize.pl
-else
-  assembly_optimization_script=
-fi
-AC_MSG_RESULT($enable_assembly_optimization)
-AC_SUBST(assembly_optimization_script)
 
 AC_ARG_ENABLE([debug],
 	      AC_HELP_STRING([--enable-debug],

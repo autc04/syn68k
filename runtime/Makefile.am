@@ -6,29 +6,13 @@ include_HEADERS = ../include/syn68k_public.h
 host_native=@HOST_NATIVE@
 
 SYN68K_CFLAGS=@SYN68K_CFLAGS@
-OPTIMIZE=@assembly_optimization_script@
 
-# The way we use labels in our assembler is out of spec.  The gcc info
-# pages say that you're not allowed to jump between labels of asm.
-# Historically, however, we chose not to put everything into a single
-# function and then jump about within spec.  IIRC, that was either due
-# to the compilation time and memory consumption to be excessive
-# and/or due to us running into compiler bugs.  This was all back
-# around 1995 though and we have more memory and better compilers.  As
-# such, it may make sense to re-evaluate the decision to split all the
-# opcodes into separate functions.  However, until we do that, we need
-# to deal with the fact that some dead-code-elimination (DCE)
-# optimizations will cause our trickery to fail.  As such, we include
-# "-fno-dce" in the architectures where we know we're going to have trouble.
-
-dce_fixup=@dce_fixup@
-
-AM_CFLAGS = -DRUNTIME
+AM_CFLAGS = -DRUNTIME -g -Wpointer-to-int-cast -Werror=pointer-to-int-cast
 
 DIST_SOURCES = 68k.defines.scm 68k.scm alloc.c backpatch.c block.c \
                blockinfo.c callback.c checksum.c deathqueue.c destroyblock.c \
 	       diagnostics.c dosinterrupts.c fold.pl hash.c \
-	       i486-optimize.pl init.c interrupt.c native.c opcode_dummy.c \
+	       init.c interrupt.c native.c opcode_dummy.c \
                profile.c rangetree.c recompile.c reg sched.pl syn68k_header.c \
 	       translate.c trap.c x86_recog.pl \
 \
@@ -88,29 +72,9 @@ libsyn68k.a: $(OBJS) $(host_native)/subdir-stmp
                     $(shell cat $(host_native)/subdir-stmp))
 	$(RANLIB) $@
 
-# Syn68k uses inline assembly that confuses various gcc stack optimizations.
-# Under gcc 2.x -fno-defer-pop is sufficient to get gcc to do the right thing
-# with our code.  Under gcc 3.x we need to also add -maccumulate-outgoing-args.
-# Since we don't know what gcc we have until we try to execute CC, we
-# do a test right here to figure out if the c-compiler understands
-# -maccumulate-outgoing-args.  If it does, we use it.
-#
-# A better solution would be to put something into our asm to form a
-# barrier that gcc won't try to do stack optimizations across.  I haven't yet
-# scoured the gcc 3 documentation or source code to see if there's something
-# obvious that can be used.
-
 syn68k.o: syn68k.c
-	outgoing=;\
-	$(CC) -maccumulate-outgoing-args -c -x c /dev/null 2> /dev/null \
-            && outgoing=-maccumulate-outgoing-args; \
-	$(CC) -S $(SYN68K_CFLAGS) $(dce_fixup) -Wall -static -fno-defer-pop -Wno-unused\
-		$(LOCAL_INCLUDES) $$outgoing syn68k.c -g -o ./syn68k.s
-	if [ x"$(OPTIMIZE)" != x ] ; then \
-		$(PERL) $(srcdir)/$(OPTIMIZE) < syn68k.s > syn68k.s.new && \
-                mv syn68k.s.new syn68k.s ; fi
-	$(CC) -xassembler-with-cpp -c ./syn68k.s -o syn68k.o
-	$(RM) ./syn68k.s
+	$(CC) -c $(SYN68K_CFLAGS) -Wall -static -Wno-unused\
+		$(LOCAL_INCLUDES) syn68k.c -g -o ./syn68k.o
 
 syn68k.c mapindex.c mapinfo.c profileinfo.gz:	../syngen/syngen syn68k_header.c 68k.scm 68k.defines.scm\
 				../include/syn68k_private.h    \
