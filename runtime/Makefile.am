@@ -27,7 +27,7 @@ AM_CFLAGS = -DRUNTIME
 
 DIST_SOURCES = 68k.defines.scm 68k.scm alloc.c backpatch.c block.c \
                blockinfo.c callback.c checksum.c deathqueue.c destroyblock.c \
-	       diagnostics.c dosinterrupts.c fold.pl hash.c i486-cleanup.pl \
+	       diagnostics.c dosinterrupts.c fold.pl hash.c \
 	       i486-optimize.pl init.c interrupt.c native.c opcode_dummy.c \
                profile.c rangetree.c recompile.c reg sched.pl syn68k_header.c \
 	       translate.c trap.c x86_recog.pl \
