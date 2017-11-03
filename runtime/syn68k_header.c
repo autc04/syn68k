@@ -127,7 +127,6 @@ reset_frequency ()
 
 #ifdef SYNCHRONOUS_INTERRUPTS
 # define CHECK_FOR_INTERRUPT(pc)			\
-do							\
 {							\
   if (INTERRUPT_PENDING ())				\
     {							\
@@ -142,7 +141,7 @@ do							\
 	  NEXT_INSTRUCTION (PTR_WORDS);			\
 	}						\
     }							\
-} while (0)
+}
 #else  /* !SYNCHRONOUS_INTERRUPTS */
 # define CHECK_FOR_INTERRUPT(pc)
 #endif /* !SYNCHRONOUS_INTERRUPTS */
@@ -196,7 +195,7 @@ static void next_instruction_hook(const void *vp)
 # define CASE_POSTAMBLE(words_to_inc) } NEXT_INSTRUCTION (words_to_inc); }
 #else
 # define CASE(n) case n:
-# define NEXT_INSTRUCTION(ignored) break
+# define NEXT_INSTRUCTION(words_to_inc) { INCREMENT_CODE (words_to_inc); break; }
 # define CASE_PREAMBLE(name,bits,ms,mns,n) {
 # define CASE_POSTAMBLE(words_to_inc) } NEXT_INSTRUCTION (words_to_inc);
 #endif
@@ -386,17 +385,6 @@ static const uint8 neg_bcd_table[16] = {
   };
 #endif
 
-
-#if defined (__GNUC__) && __GNUC__ > 2
-#  define NOINLINE __attribute__((noinline))
-#else
-#  define NOINLINE
-#endif
-
-static void threaded_gateway (void) NOINLINE;
-
-const void **direct_dispatch_table;
-
 /*
  interpret_code1 is the real interpreter function.
  
@@ -414,25 +402,30 @@ interpret_code1 (const uint16 *start_code, CPUState *cpu_state_ptr, const void *
 void
 interpret_code (const uint16 *start_code)
 {
-	interpret_code1(start_code, &cpu_state, NULL);
+  interpret_code1(start_code, &cpu_state, NULL);
 }
 
+#ifdef USE_DIRECT_DISPATCH
+const void **direct_dispatch_table;
 void init_dispatch_table()
 {
-	interpret_code1(NULL, NULL, &direct_dispatch_table);
+  interpret_code1(NULL, NULL, &direct_dispatch_table);
 }
+#endif
 
 static void
 interpret_code1 (const uint16 *code, CPUState *cpu_state_ptr, const void ***out_dispatch_table)
 {
-	if(out_dispatch_table)
-	  goto return_dispatch_table;
-  
+#ifdef USE_DIRECT_DISPATCH
+  if(out_dispatch_table)
+    goto return_dispatch_table;
+#endif
+
 #ifdef USE_BIOS_TIMER
   volatile uint16 saved_fs;
 #endif
 
-/* #define	CODE_HISTORY	10 */
+// #define	CODE_HISTORY	10 
 #if	defined(CODE_HISTORY)
   uint16 lastcodes[CODE_HISTORY];
   uint16 *lastcodeps[CODE_HISTORY];
@@ -569,16 +562,11 @@ interpret_code1 (const uint16 *code, CPUState *cpu_state_ptr, const void ***out_
   }
 #endif
 
-  /* Extract out increment of code and put it before the loop; this
-   * should save some memory as arms of the switch that used to increment
-   * this and branch back to the top can now just branch back to the top.
-   * Will probably also help instruction cache hits.  Falls through to
-   * the main loop...
-   */
- main_loop:
+main_loop:
 #ifdef USE_DIRECT_DISPATCH
-	NEXT_INSTRUCTION (ROUND_UP (PTR_WORDS));
+  NEXT_INSTRUCTION (ROUND_UP (PTR_WORDS));
 #else
+  INCREMENT_CODE(PTR_WORDS);
 
   while (1)
     {
@@ -588,11 +576,10 @@ interpret_code1 (const uint16 *code, CPUState *cpu_state_ptr, const void ***out_
 				   sizeof(lastcodes ) - sizeof(lastcodes [0]));
     memmove(lastcodeps+1, lastcodeps,
 				   sizeof(lastcodeps) - sizeof(lastcodeps[0]));
-    lastcodes [0] = (int) *(void **)code;
+    lastcodes [0] = (int) (intptr_t) ((void **)code)[-1];
     lastcodeps[0] =  code;
 #endif
-
-      switch ((int) *(((void **)code)++))
+      switch ((intptr_t) ((void**)code)[-1])
 	{
 #endif
 
@@ -616,7 +603,7 @@ interpret_code1 (const uint16 *code, CPUState *cpu_state_ptr, const void ***out_
 		: : "m" (saved_fs));
 #endif
 
-  --emulation_depth;
+        --emulation_depth;
 	assert (emulation_depth >= 0);
 	return;
 
