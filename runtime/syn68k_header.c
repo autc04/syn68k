@@ -1,30 +1,5 @@
 #include "config.h"
 
-/* Global register to hold the PC.  We put this up here so that
- * the global register will be defined before any of the inline functions
- * in syn68k_public.h are hit, but after uint16 is typedef'd.
- */
-#ifdef i386
-# ifdef __CHECKER__
-#  define GLOBAL_REGISTER_DECLS \
-         register const uint16 *code asm ("%si");
-# else /* !__CHECKER__ */
-#  define GLOBAL_REGISTER_DECLS \
-         register const uint16 *code asm ("%si"); \
-         register CPUState *cpu_state_ptr asm ("%bp");
-# endif /* !__CHECKER__ */
-#elif defined (mc68000)
-# define GLOBAL_REGISTER_DECLS register const uint16 *code asm ("a4");
-#elif defined (__alpha__)
-# define GLOBAL_REGISTER_DECLS register const uint16 *code asm ("$9");
-#elif defined (powerpc) || defined (__ppc__)
-# define GLOBAL_REGISTER_DECLS register const uint16 *code asm ("%r13");
-#elif defined(__x86_64)
-# define GLOBAL_REGISTER_DECLS register const uint16 *code asm ("%r12");
-#else
-# error "Choose a global register to hold the current synthetic PC.  Make sure it is saved by the normal calling convention."
-#endif
-
 
 /* #define this value so headers can detect that syn68k.c is including them. */
 #define SYN68K_C
@@ -44,11 +19,7 @@
 #include "recompile.h"
 #include <stdlib.h>
 
-#if defined (i386) && !defined (__CHECKER__)
-#define cpu_state (*cpu_state_ptr)  /* To provide more concise code. */
-#endif
 #include "ccfuncs.h"
-#undef cpu_state
 
 #ifdef DEBUG
 # define IFDEBUG(x) x
@@ -447,14 +418,14 @@ const void **direct_dispatch_table;
  interpret_code1 is the real interpreter function.
  
  There are three ways of calling it:
-	1. interpret_code1(start_code, NULL, -1);
+	1. interpret_code1(start_code, &cpu_state, NULL, -1);
 	   This interprets code and is also available as interpret_code(start_code)
 
-	2. interpret_code1(NULL, &dispatch_table, -1);
+	2. interpret_code1(NULL, NULL, &dispatch_table, -1);
 		 This initializes dispatch_table to point to the dispatch table.
 		 Called by init_dispatch_table from initialize_68k_emulator.
 
-	3. interpret_code1(NULL, &something, opcode_number)
+	3. interpret_code1(NULL, NULL, &something, opcode_number)
 		 Directly jump to the code for opcode_number and crash, because things are not
 		 set up properly.
 		 Never called, but don't tell gcc about that, or it might start eliminating code we're still
@@ -464,31 +435,26 @@ const void **direct_dispatch_table;
 		 same machine code with asm-free code.
  */
 void
-interpret_code1 (const uint16 *start_code, const void ***out_dispatch_table, int invoke_now_hack);
+interpret_code1 (const uint16 *start_code, CPUState *cpu_state_ptr, const void ***out_dispatch_table, int invoke_now_hack);
 
 void
 interpret_code (const uint16 *start_code)
 {
-	interpret_code1(start_code, NULL, -1);
+	interpret_code1(start_code, &cpu_state, NULL, -1);
 }
 
 void init_dispatch_table()
 {
-	interpret_code1(NULL, &direct_dispatch_table, -1);
+	interpret_code1(NULL, NULL, &direct_dispatch_table, -1);
 }
 
 void
-interpret_code1 (const uint16 *start_code, const void ***out_dispatch_table, int invoke_now_hack)
+interpret_code1 (const uint16 *start_code, CPUState *cpu_state_ptr, const void ***out_dispatch_table, int invoke_now_hack)
 {
 	if(out_dispatch_table)
 	  goto return_dispatch_table;
-  jmp_buf setjmp_buf;
-  syn68k_addr_t  saved_amode_p, saved_reversed_amode_p;  /* Used in interpreter. */
-  jmp_buf *saved_setjmp_buf;
-  const uint16 *saved_code;
-#if defined (i386) && !defined (__CHECKER__)
-  CPUState *saved_cpu_state_ptr;
-#endif
+	const uint16 *code;
+  
 #ifdef USE_BIOS_TIMER
   volatile uint16 saved_fs;
 #endif
@@ -520,16 +486,7 @@ interpret_code1 (const uint16 *start_code, const void ***out_dispatch_table, int
 #define a6 cpu_state.regs[14]
 #define a7 cpu_state.regs[15]
 
-  /* Save stuff so we are reentrant and don't smash registers illegally. */
-#if defined (i386) && !defined (__CHECKER__)
-  saved_cpu_state_ptr = cpu_state_ptr;
-  cpu_state_ptr = &cpu_state;
 #define cpu_state (*cpu_state_ptr)  /* To provide more concise code. */
-#endif
-  saved_amode_p          = cpu_state.amode_p;
-  saved_reversed_amode_p = cpu_state.reversed_amode_p;
-  saved_setjmp_buf       = cpu_state.setjmp_buf;
-  saved_code             = code;
 
 #ifdef USE_BIOS_TIMER
   asm volatile ("movw %%fs,%0\n\t"
@@ -650,28 +607,7 @@ interpret_code1 (const uint16 *start_code, const void ***out_dispatch_table, int
    */
  main_loop:
 #ifdef USE_DIRECT_DISPATCH
-  cpu_state.setjmp_buf = &setjmp_buf;
-	if (!setjmp (setjmp_buf))
-	  NEXT_INSTRUCTION (ROUND_UP (PTR_WORDS));
-  //  threaded_gateway ();
-
-  SAVE_CPU_STATE ();
-
-  /* Restore stuff so (for reentrancy). */
-  cpu_state.amode_p          = saved_amode_p;
-  cpu_state.reversed_amode_p = saved_reversed_amode_p;
-  cpu_state.setjmp_buf       = saved_setjmp_buf;
-  code                       = saved_code;
-
-#ifdef USE_BIOS_TIMER
-  asm volatile ("movw %0,%%fs"
-		: : "m" (saved_fs));
-#endif
-
-#if defined (i386) && !defined (__CHECKER__)
-  cpu_state_ptr              = saved_cpu_state_ptr;
-#endif
-  return;
+	NEXT_INSTRUCTION (ROUND_UP (PTR_WORDS));
 #else
 
   while (1)
@@ -703,21 +639,17 @@ interpret_code1 (const uint16 *start_code, const void ***out_dispatch_table, int
       /* Reserved - exit emulator. */
       CASE (0x0000)
 	CASE_PREAMBLE ("Reserved - exit emulator", "", "", "", "")
-#ifdef USE_DIRECT_DISPATCH
-	--emulation_depth;
-	assert (emulation_depth >= 0);
-	longjmp (*cpu_state.setjmp_buf, 1);
-#else
 	SAVE_CPU_STATE ();
 	/* Restore stuff (for reentrancy). */
-	cpu_state.amode_p          = saved_amode_p;
-	cpu_state.reversed_amode_p = saved_reversed_amode_p;
-	cpu_state.setjmp_buf       = saved_setjmp_buf;
-	code                       = saved_code;
-	--emulation_depth;
+#ifdef USE_BIOS_TIMER
+  asm volatile ("movw %0,%%fs"
+		: : "m" (saved_fs));
+#endif
+
+  --emulation_depth;
 	assert (emulation_depth >= 0);
 	return;
-#endif
+
 	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS));
 	
       /* Reserved - one word NOP. */

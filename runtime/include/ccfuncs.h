@@ -20,60 +20,63 @@
 
 
 static inline void
-inline_cmpb (uint8 n1, uint8 n2)
+inline_cmpb_statep (CPUState *cpu_state_ptr, uint8 n1, uint8 n2)
 {
   asm ("cmpb %b4,%b5\n\t"
        "setne %3\n\t"
        "sets %1\n\t"
        "setb %0\n\t"	/* setc */
        "seto %2"
-       : "=m" (cpu_state.ccc), "=m" (cpu_state.ccn),
-       "=m" (cpu_state.ccv), "=m" (cpu_state.ccnz)
+       : "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccn),
+       "=m" (cpu_state_ptr->ccv), "=m" (cpu_state_ptr->ccnz)
        : "q" (n1), "qi" (n2)
        : "cc");
 }
-
+#define inline_cmpb(n1,n2) inline_cmpb_statep(cpu_state_ptr, n1, n2)
 
 static inline void
-inline_cmpw (uint16 n1, uint16 n2)
+inline_cmpw_statep (CPUState *cpu_state_ptr, uint16 n1, uint16 n2)
 {
   asm ("cmpw %w4,%w5\n\t"
        "setne %3\n\t"
        "sets %1\n\t"
        "setb %0\n\t"	/* setc */
        "seto %2"
-       : "=m" (cpu_state.ccc), "=m" (cpu_state.ccn),
-       "=m" (cpu_state.ccv), "=m" (cpu_state.ccnz)
+       : "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccn),
+       "=m" (cpu_state_ptr->ccv), "=m" (cpu_state_ptr->ccnz)
        : "g" (n1), "ri" (n2)
        : "cc");
 }
+#define inline_cmpw(n1,n2) inline_cmpw_statep(cpu_state_ptr, n1, n2)
 
 
 /* This seems to be a popular instruction. */
 static inline void
-inline_cmpw_cz (uint16 n1, uint16 n2)
+inline_cmpw_cz_statep (CPUState *cpu_state_ptr, uint16 n1, uint16 n2)
 {
   asm ("cmpw %w2,%w3\n\t"
        "setne %1\n\t"
        "setb %0"	/* setc */
-       : "=m" (cpu_state.ccc), "=m" (cpu_state.ccnz)
+       : "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccnz)
        : "g" (n1), "ri" (n2)
        : "cc");
 }
+#define inline_cmpw_cz(n1,n2) inline_cmpw_cz_statep(cpu_state_ptr, n1, n2)
 
 static inline void
-inline_cmpl (uint32 n1, uint32 n2)
+inline_cmpl_statep (CPUState *cpu_state_ptr, uint32 n1, uint32 n2)
 {
   asm ("cmpl %4,%5\n\t"
        "setne %3\n\t"
        "sets %1\n\t"
        "setb %0\n\t"	/* setc */
        "seto %2"
-       : "=m" (cpu_state.ccc), "=m" (cpu_state.ccn),
-       "=m" (cpu_state.ccv), "=m" (cpu_state.ccnz)
+       : "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccn),
+       "=m" (cpu_state_ptr->ccv), "=m" (cpu_state_ptr->ccnz)
        : "g" (n1), "ri" (n2)
        : "cc");
 }
+#define inline_cmpl(n1,n2) inline_cmpl_statep(cpu_state_ptr, n1, n2)
 
 
 #define INLINE_ADDB_NOSWAP(n1, n2)					 \
@@ -83,17 +86,18 @@ inline_cmpl (uint32 n1, uint32 n2)
        "setb %1\n\t"	/* setc */					 \
        "seto %4\n\t"							 \
        "setb %2"	/* setc */					 \
-       : "=g" (n2), "=m" (cpu_state.ccc), "=m" (cpu_state.ccx),		 \
-       "=m" (cpu_state.ccn), "=m" (cpu_state.ccv), "=m" (cpu_state.ccnz) \
+       : "=g" (n2), "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccx),		 \
+       "=m" (cpu_state_ptr->ccn), "=m" (cpu_state_ptr->ccv), "=m" (cpu_state_ptr->ccnz) \
        : "0" (n2), "bi" (n1)						 \
        : "cc")
 
 static inline uint8
-inline_addb (uint8 n1, uint8 n2)
+inline_addb_statep (CPUState *cpu_state_ptr, uint8 n1, uint8 n2)
 {
   INLINE_ADDB_NOSWAP (n1, n2);
   return n2;
 }
+#define inline_addb(n1,n2) inline_addb_statep(cpu_state_ptr, n1, n2)
 
 
 
@@ -104,17 +108,18 @@ inline_addb (uint8 n1, uint8 n2)
        "setb %1\n\t"	/* setc */					 \
        "seto %4\n\t"							 \
        "setb %2"	/* setc */					 \
-       : "=g" (n2), "=m" (cpu_state.ccc), "=m" (cpu_state.ccx),		 \
-       "=m" (cpu_state.ccn), "=m" (cpu_state.ccv), "=m" (cpu_state.ccnz) \
+       : "=g" (n2), "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccx),		 \
+       "=m" (cpu_state_ptr->ccn), "=m" (cpu_state_ptr->ccv), "=m" (cpu_state_ptr->ccnz) \
        : "0" (n2), "ri" (n1)						 \
        : "cc")
 
 static inline uint16
-inline_addw (uint16 n1, uint16 n2)
+inline_addw_statep (CPUState *cpu_state_ptr, uint16 n1, uint16 n2)
 {
   INLINE_ADDW_NOSWAP (n1, n2);
   return n2;
 }
+#define inline_addw(n1,n2) inline_addw_statep(cpu_state_ptr, n1, n2)
 
 
 
@@ -125,17 +130,18 @@ inline_addw (uint16 n1, uint16 n2)
        "setb %1\n\t"	/* setc */					 \
        "seto %4\n\t"							 \
        "setb %2"	/* setc */					 \
-       : "=g" (n2), "=m" (cpu_state.ccc), "=m" (cpu_state.ccx),		 \
-       "=m" (cpu_state.ccn), "=m" (cpu_state.ccv), "=m" (cpu_state.ccnz) \
+       : "=g" (n2), "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccx),		 \
+       "=m" (cpu_state_ptr->ccn), "=m" (cpu_state_ptr->ccv), "=m" (cpu_state_ptr->ccnz) \
        : "0" (n2), "ri" (n1)						 \
        : "cc")
 
 static inline uint32
-inline_addl (uint32 n1, uint32 n2)
+inline_addl_statep (CPUState *cpu_state_ptr, uint32 n1, uint32 n2)
 {
   INLINE_ADDL_NOSWAP (n1, n2);
   return n2;
 }
+#define inline_addl(n1,n2) inline_addl_statep(cpu_state_ptr, n1, n2)
 
 
 
@@ -146,17 +152,18 @@ inline_addl (uint32 n1, uint32 n2)
        "setb %1\n\t"	/* setc */					 \
        "seto %4\n\t"							 \
        "setb %2"	/* setc */					 \
-       : "=g" (n2), "=m" (cpu_state.ccc), "=m" (cpu_state.ccx),		 \
-       "=m" (cpu_state.ccn), "=m" (cpu_state.ccv), "=m" (cpu_state.ccnz) \
+       : "=g" (n2), "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccx),		 \
+       "=m" (cpu_state_ptr->ccn), "=m" (cpu_state_ptr->ccv), "=m" (cpu_state_ptr->ccnz) \
        : "0" (n2), "bi" (n1)						 \
        : "cc")
 
 static inline uint8
-inline_subb (uint8 n1, uint8 n2)
+inline_subb_statep (CPUState *cpu_state_ptr, uint8 n1, uint8 n2)
 {
   INLINE_SUBB_NOSWAP (n1, n2);
   return n2;
 }
+#define inline_subb(n1,n2) inline_subb_statep(cpu_state_ptr, n1, n2)
 
 
 #define INLINE_SUBW_NOSWAP(n1, n2)					 \
@@ -166,17 +173,18 @@ inline_subb (uint8 n1, uint8 n2)
        "setb %1\n\t"	/* setc */					 \
        "seto %4\n\t"							 \
        "setb %2"	/* setc */					 \
-       : "=g" (n2), "=m" (cpu_state.ccc), "=m" (cpu_state.ccx),		 \
-       "=m" (cpu_state.ccn), "=m" (cpu_state.ccv), "=m" (cpu_state.ccnz) \
+       : "=g" (n2), "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccx),		 \
+       "=m" (cpu_state_ptr->ccn), "=m" (cpu_state_ptr->ccv), "=m" (cpu_state_ptr->ccnz) \
        : "0" (n2), "ri" (n1)						 \
        : "cc")
 
 static inline uint16
-inline_subw (uint16 n1, uint16 n2)
+inline_subw_statep (CPUState *cpu_state_ptr, uint16 n1, uint16 n2)
 {
   INLINE_SUBW_NOSWAP (n1, n2);
   return n2;
 }
+#define inline_subw(n1,n2) inline_subw_statep(cpu_state_ptr, n1, n2)
 
 
 
@@ -187,48 +195,51 @@ inline_subw (uint16 n1, uint16 n2)
        "setb %1\n\t"	/* setc */					 \
        "seto %4\n\t"							 \
        "setb %2"	/* setc */					 \
-       : "=g" (n2), "=m" (cpu_state.ccc), "=m" (cpu_state.ccx),		 \
-       "=m" (cpu_state.ccn), "=m" (cpu_state.ccv), "=m" (cpu_state.ccnz) \
+       : "=g" (n2), "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccx),		 \
+       "=m" (cpu_state_ptr->ccn), "=m" (cpu_state_ptr->ccv), "=m" (cpu_state_ptr->ccnz) \
        : "0" (n2), "ri" (n1)						 \
        : "cc")
 
 static inline uint32
-inline_subl (uint32 n1, uint32 n2)
+inline_subl_statep (CPUState *cpu_state_ptr, uint32 n1, uint32 n2)
 {
   INLINE_SUBL_NOSWAP (n1, n2);
   return n2;
 }
+#define inline_subl(n1,n2) inline_subl_statep(cpu_state_ptr, n1, n2)
 
 
 /* This function computes the c, n, v, and nz bits based on a byte.
  * c and v are always cleared, nz is set iff the byte is nonzero,
  * n is set iff the high bit of the byte is set.
  */
-static inline void inline_compute_c_n_v_nz_byte (uint8 n)		\
-{									\
-  asm ("movb %b0,%h0\n\t"						\
-       "andl $0x000080FF,%k0\n\t"					\
-       "movl %k0,%1"							\
-       : "=abcd" (n), "=m" (cpu_state.ccnz), "=m" (cpu_state.ccn),	\
-       "=m" (cpu_state.ccc), "=m" (cpu_state.ccv)			\
-       : "0" (n)							\
-       : "cc");								\
+static inline void inline_compute_c_n_v_nz_byte_statep (CPUState *cpu_state_ptr, uint8 n)
+{
+  asm ("movb %b0,%h0\n\t"
+       "andl $0x000080FF,%k0\n\t"
+       "movl %k0,%1"
+       : "=abcd" (n), "=m" (cpu_state_ptr->ccnz), "=m" (cpu_state_ptr->ccn),
+       "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccv)
+       : "0" (n)
+       : "cc");
 }
+#define inline_compute_c_n_v_nz_byte(n) inline_compute_c_n_v_nz_byte_statep(cpu_state_ptr, n)
 
 /* This function computes the c, n, v, and nz bits based on a word.
  * c and v are always cleared, nz is set iff the word is nonzero,
  * n is set iff the high bit of the word is set.
  */
-static inline void inline_compute_c_n_v_nz_word(uint16 n)	       	\
-{									\
-  asm ("orb %h0,%b0\n\t"						\
-       "andl $0x000080FF,%k0\n\t"					\
-       "movl %k0,%1"							\
-       : "=abcd" (n), "=m" (cpu_state.ccnz), "=m" (cpu_state.ccn),	\
-       "=m" (cpu_state.ccc), "=m" (cpu_state.ccv)			\
-       : "0" (n)							\
-       : "cc");								\
+static inline void inline_compute_c_n_v_nz_word_statep(CPUState *cpu_state_ptr, uint16 n)
+{
+  asm ("orb %h0,%b0\n\t"
+       "andl $0x000080FF,%k0\n\t"
+       "movl %k0,%1"
+       : "=abcd" (n), "=m" (cpu_state_ptr->ccnz), "=m" (cpu_state_ptr->ccn),
+       "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccv)
+       : "0" (n)
+       : "cc");
 }
+#define inline_compute_c_n_v_nz_word(n) inline_compute_c_n_v_nz_word_statep(cpu_state_ptr, n)
 
 
 /* This function computes the c, n, v, and nz bits based on a long.
@@ -240,8 +251,8 @@ static inline void inline_compute_c_n_v_nz_word(uint16 n)	       	\
        "testl %k4,%k4\n\t"					\
        "setne %0\n\t"						\
        "sets %1"						\
-       : "=m" (cpu_state.ccnz), "=m" (cpu_state.ccn),		\
-       "=m" (cpu_state.ccc), "=m" (cpu_state.ccv)		\
+       : "=m" (cpu_state_ptr->ccnz), "=m" (cpu_state_ptr->ccn),		\
+       "=m" (cpu_state_ptr->ccc), "=m" (cpu_state_ptr->ccv)		\
        : "r" ((uint32)(n))					\
        : "cc")
 
