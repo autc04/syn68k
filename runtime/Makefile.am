@@ -6,7 +6,6 @@ include_HEADERS = ../include/syn68k_public.h
 host_native=@HOST_NATIVE@
 
 SYN68K_CFLAGS=@SYN68K_CFLAGS@
-CLEANUP=@assembly_cleanup_script@
 OPTIMIZE=@assembly_optimization_script@
 
 # The way we use labels in our assembler is out of spec.  The gcc info
@@ -106,10 +105,7 @@ syn68k.o: syn68k.c
 	$(CC) -maccumulate-outgoing-args -c -x c /dev/null 2> /dev/null \
             && outgoing=-maccumulate-outgoing-args; \
 	$(CC) -S $(SYN68K_CFLAGS) $(dce_fixup) -Wall -static -fno-defer-pop -Wno-unused\
-		$(LOCAL_INCLUDES) $$outgoing syn68k.c -o ./syn68k.s
-	if [ x"$(CLEANUP)" != x ] ; then \
-		$(PERL) $(srcdir)/$(CLEANUP) < syn68k.s > syn68k.s.new && \
-                mv syn68k.s.new syn68k.s ; fi
+		$(LOCAL_INCLUDES) $$outgoing syn68k.c -g -o ./syn68k.s
 	if [ x"$(OPTIMIZE)" != x ] ; then \
 		$(PERL) $(srcdir)/$(OPTIMIZE) < syn68k.s > syn68k.s.new && \
                 mv syn68k.s.new syn68k.s ; fi

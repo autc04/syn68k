@@ -81,25 +81,6 @@ AC_MSG_RESULT([$enable_native])
 AC_SUBST(NONNATIVE)
 AC_SUBST(HOST_NATIVE)
 
-AC_ARG_ENABLE([assembly-cleanup],
-              AC_HELP_STRING([--enable-assembly-cleanup],
-                             [remove unneeded assembler instructions (default enabled for x86)]),
-              [], [if test x$host_cpu_class = xi386; then
-                     enable_assembly_cleanup=yes
-                   else
-                     enable_assembly_cleanup=no
-                   fi])
-
-AC_MSG_CHECKING([assembler cleanup])
-if test x$enable_assembly_cleanup = xyes; then
-  assembly_cleanup_script=./i486-cleanup.pl
-else
-  assembly_cleanup_script=
-fi
-AC_MSG_RESULT([$enable_assembly_cleanup])
-AC_SUBST(assembly_cleanup_script)
-
-
 # TODO: finish this
 AC_ARG_ENABLE([assembly-optimization],
               AC_HELP_STRING([--enable-assembly-optimization],

@@ -140,7 +140,7 @@ initialize_68k_emulator (void (*while_busy)(int), int native_p,
   range_tree_insert (b);
 }
 
-
+#if SIZEOF_CHAR_P > 4
 uint32_t US_TO_SYN68K_FUN(uint64 addr)
 {
   uint64 iaddr = (uint64) addr;
@@ -162,3 +162,4 @@ uint32_t US_TO_SYN68K_FUN(uint64 addr)
   }
   return 0;
 }
+#endif
