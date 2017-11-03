@@ -201,27 +201,9 @@ static void next_instruction_hook(const void *vp)
 #endif
 
 
-#if defined(__GNUC__) && !defined(__alpha) && __GNUC__ < 3
-/* Work around poor gcc code generated when adding to a global reg var. */
-
-/* NOTE: if we want to use this trick on the alpha, we'll need to cast
-         v up to 64 bits, first, but this trick may not be needed on
-	 the alpha, so we don't hassle with changes yet */
-
-/* NOTE: I hope we don't need this trick with GCC 3 or greater.  I certainly
-         haven't timed the change though.  I just put the test for __GNUC__
-         in above to get rid of some warnings */
-
-# define INCREMENT_CODE(n) (++((typeof (*code) (*)[n])code))
-
-/* It seems that gcc is generating poor code for ++'s to memory as well. */
-# define INC_VAR(v, n) ((typeof (v)) ++((char (*)[n])(v)))
-# define DEC_VAR(v, n) ((typeof (v)) --((char (*)[n])(v)))
-#else
 # define INCREMENT_CODE(n) (code += (n))
 # define INC_VAR(v, n) ((v) += (n))
 # define DEC_VAR(v, n) ((v) -= (n))
-#endif
 
 
 /* This macro rounds a size up to some integral multiple of PTR_WORDS. */
@@ -262,25 +244,12 @@ extern void abort (void);
 #define DATA_REGISTER(n,TYPE) (cpu_state.regs[n] TYPE)
 #define ADDRESS_REGISTER(n,TYPE) (cpu_state.regs[8 + (n)] TYPE)
 
-/* We use these macros to compensate for gcc brain damage when referencing
- * arrays of structs on the i386.
- */
-#ifndef offsetof
-# define offsetof(s, t) ((int)(intptr_t) &((s *) 0)->t)
-#endif
-
-#define GENERAL_REGISTER_SB(reg) \
-(*((int8  *)((int32 *)&cpu_state.regs[0] + (reg)) + offsetof (M68kReg, ub.n)))
-#define GENERAL_REGISTER_UB(reg) \
-(*((uint8 *)((int32 *)&cpu_state.regs[0] + (reg)) + offsetof (M68kReg, sb.n)))
-#define GENERAL_REGISTER_SW(reg) \
-(*(int16  *)((int8  *)((int32 *)&cpu_state.regs[0] + (reg)) \
-	     + offsetof (M68kReg, sw.n)))
-#define GENERAL_REGISTER_UW(reg) \
-(*(uint16 *)((int8  *)((int32 *)&cpu_state.regs[0] + (reg)) \
-	     + offsetof (M68kReg, uw.n)))
-#define GENERAL_REGISTER_SL(reg) (*((int32  *)&cpu_state.regs[0] + (reg)))
-#define GENERAL_REGISTER_UL(reg) (*((uint32 *)&cpu_state.regs[0] + (reg)))
+#define GENERAL_REGISTER_SB(reg) GENERAL_REGISTER(reg, .sb.n)
+#define GENERAL_REGISTER_UB(reg) GENERAL_REGISTER(reg, .ub.n)
+#define GENERAL_REGISTER_SW(reg) GENERAL_REGISTER(reg, .sw.n)
+#define GENERAL_REGISTER_UW(reg) GENERAL_REGISTER(reg, .uw.n)
+#define GENERAL_REGISTER_SL(reg) GENERAL_REGISTER(reg, .sl.n)
+#define GENERAL_REGISTER_UL(reg) GENERAL_REGISTER(reg, .ul.n)
 
 #define DATA_REGISTER_UB(n) GENERAL_REGISTER_UB (n)
 #define DATA_REGISTER_SB(n) GENERAL_REGISTER_SB (n)
@@ -536,17 +505,9 @@ interpret_code1 (const uint16 *code, CPUState *cpu_state_ptr, const void ***out_
 #define CLEANUP_AMODE(mode, size) goto cleanup_amode_for_size_ ## size
 #else  /* M68K_REGS_IN_ARRAY */
 
-/* We use ugly, idiotic code here to compensate for gcc 2.6.0 brain damage
- * when referencing arrays of structs on the i386.
- */
-#define CLEANUP_REG(mode, ix) \
-  (*(uint32 *) ((int8 *) &amode_cleanup_info[ix][0] \
-		+ (sizeof amode_cleanup_info[0][0] * (mode)) \
-		+ offsetof (AmodeCleanupInfo, reg)))
-#define CLEANUP_DELTA(mode, ix) \
-  (*(int32 *) ((int8 *) &amode_cleanup_info[ix][0] \
-	       + (sizeof amode_cleanup_info[0][0] * (mode)) \
-	       + offsetof (AmodeCleanupInfo, delta)))
+#define CLEANUP_REG(mode, ix) (amode_cleanup_info[ix][mode].reg)
+#define CLEANUP_DELTA(mode, ix) (amode_cleanup_info[ix][mode].delta)
+
 #define CLEANUP_AMODE(mode, size) \
   { \
     /* C compiler should do good things here since "size" is a constant. */ \
