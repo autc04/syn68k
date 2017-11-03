@@ -183,25 +183,8 @@ static void next_instruction_hook(const void *vp)
   { \
   FREQUENCY (n);
 # define CASE_PREAMBLE(name,bits,ms,mns,n) {
-extern void s68k_handle_opcode_dummy (void);
-# ifdef i386
-#  define NEXT_INSTRUCTION(words_to_inc) \
-{ \
-  register void *next_code asm ("%edi");   /* Little-used register. */ \
-  NEXT_INSTRUCTION_HOOK(words_to_inc); \
-  asm volatile ("movl %3,%0\n\t" \
-		"addl %4,%1\n\t" \
-		"jmp *%0\n" \
-		"/* _S68K_DONE_WITH_THIS: */"                 \
-		: "=r" (next_code), "=r" (code) : "1" (code), \
-		"g" (*(void **)(code + (words_to_inc) - PTR_WORDS)), \
-		"g" (words_to_inc * sizeof (uint16))); \
-  s68k_handle_opcode_dummy (); \
-}
 
-# else   /* !i386 */
-
-#  define NEXT_INSTRUCTION(words_to_inc)	\
+# define NEXT_INSTRUCTION(words_to_inc)	\
 {				 \
   void *next_code;	         \
   NEXT_INSTRUCTION_HOOK(words_to_inc);	 \
@@ -209,7 +192,7 @@ extern void s68k_handle_opcode_dummy (void);
   INCREMENT_CODE (words_to_inc); \
   goto *next_code; \
 }
-# endif  /* !i386 */
+
 # define CASE_POSTAMBLE(words_to_inc) } NEXT_INSTRUCTION (words_to_inc); }
 #else
 # define CASE(n) case n:
@@ -417,43 +400,33 @@ const void **direct_dispatch_table;
 /*
  interpret_code1 is the real interpreter function.
  
- There are three ways of calling it:
-	1. interpret_code1(start_code, &cpu_state, NULL, -1);
+ There are two ways of calling it:
+	1. interpret_code1(start_code, &cpu_state, NULL);
 	   This interprets code and is also available as interpret_code(start_code)
 
-	2. interpret_code1(NULL, NULL, &dispatch_table, -1);
+	2. interpret_code1(NULL, NULL, &dispatch_table);
 		 This initializes dispatch_table to point to the dispatch table.
 		 Called by init_dispatch_table from initialize_68k_emulator.
-
-	3. interpret_code1(NULL, NULL, &something, opcode_number)
-		 Directly jump to the code for opcode_number and crash, because things are not
-		 set up properly.
-		 Never called, but don't tell gcc about that, or it might start eliminating code we're still
-		 interested in.
-		 This is only relevant for i386, where using inline assembly instead of goto* seems to generate
-		 better code. This should go away, it probably simply needs the right gcc flags to generate the 
-		 same machine code with asm-free code.
  */
-void
-interpret_code1 (const uint16 *start_code, CPUState *cpu_state_ptr, const void ***out_dispatch_table, int invoke_now_hack);
+static void
+interpret_code1 (const uint16 *start_code, CPUState *cpu_state_ptr, const void ***out_dispatch_table);
 
 void
 interpret_code (const uint16 *start_code)
 {
-	interpret_code1(start_code, &cpu_state, NULL, -1);
+	interpret_code1(start_code, &cpu_state, NULL);
 }
 
 void init_dispatch_table()
 {
-	interpret_code1(NULL, NULL, &direct_dispatch_table, -1);
+	interpret_code1(NULL, NULL, &direct_dispatch_table);
 }
 
-void
-interpret_code1 (const uint16 *start_code, CPUState *cpu_state_ptr, const void ***out_dispatch_table, int invoke_now_hack)
+static void
+interpret_code1 (const uint16 *code, CPUState *cpu_state_ptr, const void ***out_dispatch_table)
 {
 	if(out_dispatch_table)
 	  goto return_dispatch_table;
-	const uint16 *code;
   
 #ifdef USE_BIOS_TIMER
   volatile uint16 saved_fs;
@@ -500,9 +473,6 @@ interpret_code1 (const uint16 *start_code, CPUState *cpu_state_ptr, const void *
 
   /* Grab all information from the CPUState. */
   LOAD_CPU_STATE ();
-
-  code = start_code;
-
   /* Skip over various hacks. */
   goto main_loop;
 

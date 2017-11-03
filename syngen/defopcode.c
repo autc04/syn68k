@@ -136,7 +136,6 @@ done_generating_code ()
 						"    };\n"
 						"return_dispatch_table:\n"
 						"    *out_dispatch_table = dispatch_table;\n"
-						"    if(invoke_now_hack >= 0) goto *(dispatch_table[invoke_now_hack]);\n"
             "}\n",
             syn68k_c_stream);
 
