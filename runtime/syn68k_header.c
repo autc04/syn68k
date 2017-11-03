@@ -443,22 +443,42 @@ static void threaded_gateway (void) NOINLINE;
 
 const void **direct_dispatch_table;
 
-static void
-interpret_code1 (const uint16 *start_code, const void ***out_dispatch_table);
+/*
+ interpret_code1 is the real interpreter function.
+ 
+ There are three ways of calling it:
+	1. interpret_code1(start_code, NULL, -1);
+	   This interprets code and is also available as interpret_code(start_code)
+
+	2. interpret_code1(NULL, &dispatch_table, -1);
+		 This initializes dispatch_table to point to the dispatch table.
+		 Called by init_dispatch_table from initialize_68k_emulator.
+
+	3. interpret_code1(NULL, &something, opcode_number)
+		 Directly jump to the code for opcode_number and crash, because things are not
+		 set up properly.
+		 Never called, but don't tell gcc about that, or it might start eliminating code we're still
+		 interested in.
+		 This is only relevant for i386, where using inline assembly instead of goto* seems to generate
+		 better code. This should go away, it probably simply needs the right gcc flags to generate the 
+		 same machine code with asm-free code.
+ */
+void
+interpret_code1 (const uint16 *start_code, const void ***out_dispatch_table, int invoke_now_hack);
 
 void
 interpret_code (const uint16 *start_code)
 {
-	interpret_code1(start_code, NULL); 
+	interpret_code1(start_code, NULL, -1);
 }
 
 void init_dispatch_table()
 {
-	interpret_code1(NULL, &direct_dispatch_table);
+	interpret_code1(NULL, &direct_dispatch_table, -1);
 }
 
-static void
-interpret_code1 (const uint16 *start_code, const void ***out_dispatch_table)
+void
+interpret_code1 (const uint16 *start_code, const void ***out_dispatch_table, int invoke_now_hack)
 {
 	if(out_dispatch_table)
 	  goto return_dispatch_table;
