@@ -1,4 +1,4 @@
-#ifndef _translate_h
+#ifndef _translate_h_
 #define _translate_h_
 
 #include "block.h"
