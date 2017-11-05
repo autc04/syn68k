@@ -770,31 +770,31 @@ main_loop:
       CASE (0x0056)
 	CASE_PREAMBLE ("Reserved - compute cpu_state.amode_p for (xxx).L",
 		       "", "", "", "")
-	cpu_state.amode_p = US_TO_SYN68K((char *) *(signed char **)code);
+	cpu_state.amode_p = *(uint32_t*)code;
 #ifdef DEBUG
 	printf ("\tcpu_state.amode_p = %p\n", (void *) cpu_state.amode_p);
 #endif
-	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS + PTR_WORDS));
+	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS + 2));
 
       CASE (0x0057)
 	CASE_PREAMBLE ("Reserved - compute cpu_state.reversed_amode_p for (xxx).L",
 		       "", "", "", "")
-	cpu_state.reversed_amode_p = US_TO_SYN68K((char *) *(signed char **)code);
+	cpu_state.reversed_amode_p = *(uint32_t*)code;
 #ifdef DEBUG
 	printf ("\tcpu_state.reversed_amode_p = %p\n",
 		(void *) cpu_state.reversed_amode_p);
 #endif
-	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS + PTR_WORDS));
+	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS + 2));
 
 #define AMODE_6_SIMPLE(casenum, areg, ixreg, size, p) \
       CASE (casenum) \
 	CASE_PREAMBLE ("Reserved - compute " #p " for mode == 6, areg == " \
 		       #areg ", ixreg == " #ixreg, "", "", "", "") \
 	p = (CLEAN ((areg) + (((int32) (ixreg)) << \
-				       *(uint32 *)(code + PTR_WORDS + 2)) \
-			     + US_TO_SYN68K(*(signed char **)code))); \
+				       *(uint32 *)(code + 2 + 2)) \
+			     + (*(uint32_t*)code))); \
 	IFDEBUG (printf ("\t" #p " = %p\n", (void *) p)); \
-	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS + (size)))
+	CASE_POSTAMBLE (ROUND_UP (2 + (size)))
 
 #define ALL_AREG_AMODE_6_SIMPLE(base0,  base1,  base2,  base3,  \
 				base4,  base5,  base6,  base7,  \

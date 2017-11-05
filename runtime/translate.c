@@ -904,9 +904,8 @@ generate_amode_fetch (uint16 *code, const uint16 *m68koperand, int amode,
 					 + (0x24 << ((extword >> 11) & 1))
 					 + (reversed * 9) + reg));
 
-	  WRITE_PTR (scode, SYN68K_TO_US ((ptr_sized_uint)
-					  (((int8 *) m68koperand)[1])));
-	  scode += PTR_WORDS;
+	  WRITEUL_UNSWAPPED (scode, ((int8 *) m68koperand)[1]);
+	  scode += 2;
 	  *(uint32 *)(scode    ) = (extword >> 12) & 7;
 	  *(uint32 *)(scode + 2) = (extword >> 9) & 3;
 	  return ROUND_UP (scode + 4 - code);
@@ -941,8 +940,8 @@ generate_amode_fetch (uint16 *code, const uint16 *m68koperand, int amode,
 	    disp = 0;
 	    break;
 	    }
-	  WRITE_PTR (scode, SYN68K_TO_US (disp));
-	  scode += PTR_WORDS;
+	  WRITESL_UNSWAPPED (scode, disp);
+	  scode += 2;
 
 	  if (!(extword & 0x40))
 	    {
@@ -1013,24 +1012,22 @@ generate_amode_fetch (uint16 *code, const uint16 *m68koperand, int amode,
       return ROUND_UP (scode + 2 - code);
     case 1:
       {
-	char *val = (char *) SYN68K_TO_US (CLEAN
-					   (READUL
-					    (US_TO_SYN68K (m68koperand))));
+	uint32_t val = CLEAN (READUL (US_TO_SYN68K (m68koperand)));
 
-	/* Specify absolute long address.  Give a real pointer in our space. */
+	/* Specify absolute long address. */
 	scode = output_opcode (scode, 0x56 + reversed);
-	WRITE_PTR (scode, val);
-	return ROUND_UP (scode + PTR_WORDS - code);
+	WRITEUL_UNSWAPPED (scode, val);
+	return ROUND_UP (scode + 2 - code);
       }
     case 2:
       {
-	char *val = (READSW (US_TO_SYN68K (m68koperand))
-		     + (char *) m68koperand);
+	uint32_t val = (READSW (US_TO_SYN68K (m68koperand))
+		     + US_TO_SYN68K(m68koperand));
 
-	/* Specify absolute long address.  Give a real ptr in our space. */
+	/* Specify absolute long address. */
 	scode = output_opcode (scode, 0x56 + reversed);
-	WRITE_PTR (scode, val);
-	return ROUND_UP (scode + PTR_WORDS - code);
+	WRITEUL_UNSWAPPED (scode, val);
+	return ROUND_UP (scode + 2 - code);
       }
     case 3:      /* 111/011 (d8,PC,Xn), (bd,PC,Xn), ([bd,PC,Xn],od) */
                  /*         ([bd,PC],Xn,od) */
@@ -1044,10 +1041,9 @@ generate_amode_fetch (uint16 *code, const uint16 *m68koperand, int amode,
 					   + (0x24 << ((extword >> 11) & 1))
 					   + (reversed * 9) + 8));
 
-	    WRITE_PTR (scode,
-		       (char *) ((long) m68koperand
-				     + (((int8 *) m68koperand)[1])));
-	    scode += PTR_WORDS;
+	    WRITEUL_UNSWAPPED (scode,
+		       US_TO_SYN68K(m68koperand) + (((int8 *) m68koperand)[1]));
+	    scode += 2;
 	    *(uint32 *)(scode    ) = reg;
 	    *(uint32 *)(scode + 2) = (extword >> 9) & 3;
 	    return ROUND_UP (scode + 4 - code);
@@ -1079,7 +1075,7 @@ generate_amode_fetch (uint16 *code, const uint16 *m68koperand, int amode,
 	      break;
 	    }
 	    disp += US_TO_SYN68K (m68koperand);/* Add in PC to displacement. */
-	    WRITE_PTR (scode, SYN68K_TO_US (disp));
+	    WRITESL_UNSWAPPED (scode, disp);
 	    scode += PTR_WORDS;
 
 	    if (!(extword & 0x40))
