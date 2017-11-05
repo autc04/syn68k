@@ -282,8 +282,8 @@ extern uint32_t US_TO_SYN68K_FUN(uint64 addr);
 	ROMlib for translations of addresses where it's important to preserve
 	the address 0 as 0 */
 
-#define SYN68K_TO_US_CHECK0(addr) ({ typeof(addr) t; t = addr; t ? SYN68K_TO_US(t) : (uint16 *) 0; })
-#define US_TO_SYN68K_CHECK0(addr) ({ typeof(addr) t; t = addr; t ? US_TO_SYN68K(t) : (uint32) 0; })
+#define SYN68K_TO_US_CHECK0(addr) ({ __typeof__(addr) t; t = addr; t ? SYN68K_TO_US(t) : (uint16 *) 0; })
+#define US_TO_SYN68K_CHECK0(addr) ({ __typeof__(addr) t; t = addr; t ? US_TO_SYN68K(t) : (uint32) 0; })
 
 /* Macros for byte swapping + specifying signedness.  On a big endian
  * machine, these macros are dummies and don't actually swap bytes.
