@@ -43,7 +43,10 @@ test_all_instructions (uint32 try_count)
 
   for (info = test_info; info->name; info++)
     {
-      uint32 times_to_try = try_count;
+		//	if(strcmp(info->name, "moveb_pc_ind_ix_dreg"))
+		//		continue;
+
+			uint32 times_to_try = try_count;
       if (info->max_times_to_call != 0
 	  && info->max_times_to_call > times_to_try)
 	times_to_try = info->max_times_to_call;
@@ -125,6 +128,9 @@ test_instruction (uint32 times_to_test, const TestInfo *info, DriverMode mode)
 #endif
   uint16 pre_crc = 0, mem_crc = 0, reg_crc = 0, cc_crc = 0;
 
+  my_random_seed = compute_crc(info->name, strlen(info->name), 0);
+  memset(mem, 0, MEM_SIZE+CODE_SIZE);
+  memset(&cpu_state, 0, sizeof(cpu_state));
   /* NOTE: cc_crc is the old reg_crc, where we include condition codes.
            reg_crc now has regs only.  I think the way we handle the "seed"
 	   in computer_crc makes having a "crc" of just the condition codes
@@ -178,8 +184,7 @@ test_instruction (uint32 times_to_test, const TestInfo *info, DriverMode mode)
 	  destroy_blocks (US_TO_SYN68K (m68k_code), CODE_SIZE);
 	}
 
-      if (info->might_change_memory)
-	randomize_mem ();
+      randomize_mem ();
 
       /* Create the 68k code. */
       info->code_creator (code_dest);
@@ -194,8 +199,7 @@ test_instruction (uint32 times_to_test, const TestInfo *info, DriverMode mode)
 #endif
 
       memcpy (saved_regs, cpu_state.regs, sizeof saved_regs);
-      if (info->might_change_memory)
-	memcpy (saved_mem, mem, sizeof saved_mem);
+      memcpy (saved_mem, mem, sizeof saved_mem);
 
 #if defined (NeXT) && defined (mc68000)
       if (mode != DM_USE_EMULATOR)

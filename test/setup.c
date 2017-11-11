@@ -10,12 +10,13 @@
 
 uint8 *mem;
 
+unsigned my_random_seed = 9;
+
 static inline int32
 my_random ()
 {
-  static unsigned n = 9;
-  n = (n * 1233143127) ^ (n >> 13);
-  return n & 0x7FFFFFFF;
+  my_random_seed = (my_random_seed * 1233143127) ^ (my_random_seed >> 13);
+  return my_random_seed & 0x7FFFFFFF;
 }
 
 

@@ -7,6 +7,7 @@
 #define CODE_SIZE 512
 
 extern uint8 *mem;
+extern unsigned my_random_seed;
 
 extern void randomize_mem (void);
 extern void randomize_regs (int low_reg, int high_reg, uint32 low_val,
