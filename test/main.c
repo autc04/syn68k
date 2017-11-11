@@ -5,6 +5,7 @@
 #include "crc.h"
 #include "testrt.h"
 #include "testqsort.h"
+#include "setup.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,11 +29,8 @@ main (int argc, char *argv[])
   malloc_debug (31);   /* Just to be safe. */
 #endif
 
-#if SIZEOF_CHAR_P == 4
-  ROMlib_offset = MEMORY_OFFSET;
-#else
-  ROMlib_offsets[0] = MEMORY_OFFSET;
-#endif
+  mem = malloc (MEM_SIZE + CODE_SIZE);
+  ROMlib_offset = (uintptr_t) mem;
 
   /* Set up default values for command line switches. */
   test_only_non_cc_variants = 0;

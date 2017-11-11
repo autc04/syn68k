@@ -37,63 +37,9 @@ test_all_instructions (uint32 try_count)
 {
   const TestInfo *info;
 
-  /* Try to provide a consistent address across multiple platforms so that
-   * crc's of address registers containing ptrs to this space turn out
-   * the same.  To this end we malloc a large block of memory and hope
-   * the pointer we want is in the middle.  If this doesn't work, you'll
-   * have to hand-massage this.
-   */
-  if (mem == NULL)
-    {
-      size_t page_size;
-
-#define M_SIZE (40 * 1024 * 1024)
-#define CODE_SIZE 512
-
-#if     !defined (__linux__)
-#define DESIRED_PTR ((uint8 *) 0x26C0000 + MEMORY_OFFSET)
-      uint8 *m = (uint8 *)malloc (M_SIZE + CODE_SIZE + MEMORY_OFFSET);
-#else   /* defined (__linux__) */
-#if !defined (powerpc) && 0
-#define DESIRED_PTR ((uint8 *) 0xAF000000 + MEMORY_OFFSET)
-#else
-#define DESIRED_PTR ((uint8 *) 0x7F000000 + MEMORY_OFFSET)
-#endif
-      uint8 *m = mmap (DESIRED_PTR,
-                       (M_SIZE + SLOP + 4095) & ~4095,
-                       PROT_READ|PROT_WRITE|PROT_EXEC,
-                       MAP_ANONYMOUS|MAP_FIXED|MAP_PRIVATE, -1, 0);
-#endif   /* defined (__linux__) */
-
-#if !defined (__MINGW32__)
-      page_size = getpagesize ();
-#else
-#warning We currently do not use getpagesize because with the version
-#warning of MingW32 that we use it winds up pulling in a routine that
-#warning we do not currently have available (VirtualProtect).  This should
-#warning be looked into sometime.
-      page_size = 4096;
-#endif
-
-      if ((DESIRED_PTR < m || DESIRED_PTR >= m + M_SIZE - MEM_SIZE - CODE_SIZE)
-	  && generate_crc)
-	{
-	  /* Print out address here in case assertion fails. */
-	  printf ("driver.c: Bad m == 0x%lX, absurd hack didn't work (page_size = %ld, DESIRED_PTR = 0x%lX).\n",
-		  (unsigned long) m, (long) page_size, (unsigned long) DESIRED_PTR);
-	  abort ();
-	}
-
-      if (generate_crc)
-	mem = DESIRED_PTR;
-      else
-	mem = m;
-      return_address_addr = (uint32 *)(mem + MEM_SIZE);	/* must be a 32 bit address */
-      ccr_addr = (uint16 *) ((char *) return_address_addr +
+  return_address_addr = (uint32 *)(mem + MEM_SIZE);	/* must be a 32 bit address */
+  ccr_addr = (uint16 *) ((char *) return_address_addr +
 			     sizeof(*return_address_addr));
-    }
-  if (generate_crc)
-    printf ("mem == 0x%lX\n", (unsigned long) DESIRED_PTR);
 
   for (info = test_info; info->name; info++)
     {

@@ -4,6 +4,7 @@
 #include "syn68k_public.h"
 
 #define MEM_SIZE 2048
+#define CODE_SIZE 512
 
 extern uint8 *mem;
 
