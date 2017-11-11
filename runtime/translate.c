@@ -1076,7 +1076,7 @@ generate_amode_fetch (uint16 *code, const uint16 *m68koperand, int amode,
 	    }
 	    disp += US_TO_SYN68K (m68koperand);/* Add in PC to displacement. */
 	    WRITESL_UNSWAPPED (scode, disp);
-	    scode += PTR_WORDS;
+	    scode += 2;
 
 	    if (!(extword & 0x40))
 	      {
