@@ -1,4 +1,5 @@
 #include "crc.h"
+#include <stdint.h>
 
 /*
  * Algorithm from "Computer Networks" by Andrew S. Tanenbaum pp. 129-132.
@@ -98,7 +99,7 @@ polydivide (unsigned long l)
 unsigned short
 compute_crc (unsigned char *data, long length, unsigned short seed)
 {
-  unsigned long l;
+  uint32_t l;
 
 #if 0
   if (length == 0)
