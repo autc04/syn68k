@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <sys/param.h>
+//#include <sys/param.h>
 
 #if defined (__MINGW32__)
 #include <stddef.h> /* needed for ctype.h */
@@ -484,7 +484,7 @@ open_file (const char *file, const char *search_dirs[])
 {
   FILE *fp;
   const char **dir;
-  char buf[MAXPATHLEN];
+  char buf[4096];
   
   /* See if we've opened too many files already. */
   if (file_stack_ptr >= MAX_INCLUDE_DEPTH)
@@ -494,7 +494,7 @@ open_file (const char *file, const char *search_dirs[])
    * Otherwise, check all the directories in the search path.
    */
   fp = NULL;
-  if (file[0] == '/')
+  if (file[0] == '/' || !search_dirs)
     fp = fopen (file, "r");
   else for (dir = &search_dirs[0]; *dir != NULL; dir++)
     {

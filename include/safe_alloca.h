@@ -2,6 +2,11 @@
 #define	__safe_alloca__
 
 #include <assert.h>
+#include <stdlib.h>
+
+#ifdef _MSC_VER
+#define alloca(x) _alloca(x)
+#endif
 
 #if	!defined(NDEBUG)
 

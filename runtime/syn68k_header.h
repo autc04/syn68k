@@ -39,9 +39,7 @@
  * head here; if that fails, we can do the slower check and possible compile.
  */
 
-static __inline__ const uint16 *code_lookup (uint32 addr) __attribute__((always_inline));
-
-static __inline__ const uint16 *
+static inline const uint16 *
 code_lookup (uint32 addr)
 {
   Block *b = block_hash_table[BLOCK_HASH (addr)];

@@ -118,7 +118,7 @@ initialize_68k_emulator (void (*while_busy)(int), int native_p,
   generate_block (NULL, US_TO_SYN68K (&rte), &b, TRUE);
 #else
   {
-    typeof (ROMlib_offsets[0]) save_offset;
+    uint64_t save_offset;
 
     save_offset = ROMlib_offsets[0];
     ROMlib_offsets[0] = (uint64)&rte; /* so the RTE will be reachable with 32 bit addr */

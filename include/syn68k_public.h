@@ -17,7 +17,8 @@ extern "C"
      || defined(sparc) || defined(powerpc) || defined (__ppc__)
 #  define BIGENDIAN  /* ARDI naming convention, why rock the boat? */
 # elif defined(__alpha) || defined(i860) || defined(vax) || defined(i386) \
-     || defined(__x86_64)
+     || defined(__x86_64) || defined(__x86_64__) \
+     || defined (_M_X64) || defined(_M_IX86)
 #  define LITTLEENDIAN
 # else
 #  error "Unknown CPU type"
@@ -40,7 +41,10 @@ extern "C"
 #  define QUADALIGN
 # elif !defined(m68k) && !defined(mc68000) && !defined(i386) \
        && !defined(vax) && !defined(__alpha) && !defined(powerpc) \
-       && !defined (__ppc__) && !defined(__x86_64)
+       && !defined (__ppc__) && !defined(__x86_64) \
+       && !defined(__x86_64) && !defined(__x86_64__) \
+       && !defined (_M_X64) && !defined(_M_IX86)
+
 #  error Unknown CPU type
 # endif
 #endif
@@ -204,7 +208,7 @@ GLOBAL_REGISTER_DECLS
 extern uint16 callback_dummy_address_space[];
 #define CALLBACK_SLOP 16
 #define MAGIC_ADDRESS_BASE \
-((syn68k_addr_t) US_TO_SYN68K((unsigned long) (&callback_dummy_address_space[CALLBACK_SLOP])))
+((syn68k_addr_t) US_TO_SYN68K((uintptr_t) (&callback_dummy_address_space[CALLBACK_SLOP])))
 #define MAGIC_EXIT_EMULATOR_ADDRESS (MAGIC_ADDRESS_BASE + 0)
 #define MAGIC_RTE_ADDRESS           (MAGIC_ADDRESS_BASE + 2)
 
@@ -227,7 +231,7 @@ extern uint16 callback_dummy_address_space[];
 
 #if !defined(SIZEOF_CHAR_P)
 
-#if !defined(__x86_64)
+#if !defined(__x86_64) && !defined(_M_X64) && !defined(__alpha)
 # define SIZEOF_CHAR_P 4
 #else
 # define SIZEOF_CHAR_P 8
@@ -264,11 +268,17 @@ extern uint64 ROMlib_sizes[OFFSET_TABLE_SIZE];
 
 #define ROMlib_offset (ROMlib_offsets[0])
 
+#if 1
+static inline uint16* SYN68K_TO_US(uint32_t addr)
+{
+	return (uint16 *)((uint64)addr + ROMlib_offsets[addr >> (32 - OFFSET_TABLE_BITS)]);
+}
+#else
 #define SYN68K_TO_US(addr) ({ \
   uint32 _addr = addr; \
   (uint16 *) ((uint64)_addr + ROMlib_offsets[_addr >> (32-OFFSET_TABLE_BITS)]); \
 })
-
+#endif
 
 // TODO: inline something
 #define US_TO_SYN68K(addr) (US_TO_SYN68K_FUN((uint64)(addr)))
@@ -673,20 +683,28 @@ extern void initialize_68k_emulator (void (*while_busy)(int), int native_p,
 				     uint32 trap_vector_storage[64],
 				     uint32 dos_int_flag_addr);
 
+
+#ifdef NONNATIVE
+#define ASM_NAME(x)
+#else
+#define ASM_NAME(x) asm(x)
+#endif
+
 #if defined (SYNCHRONOUS_INTERRUPTS)
 extern void interrupt_generate (unsigned priority);
 extern void interrupt_note_if_present (void);
 /* called from `host_interrupt_status_changed' assembly stub in
    host-native.c */
-extern syn68k_addr_t interrupt_process_any_pending (syn68k_addr_t pc)
-  asm ("_interrupt_process_any_pending");
+extern syn68k_addr_t interrupt_process_any_pending(syn68k_addr_t pc)
+	ASM_NAME("_interrupt_process_any_pending");
+
 #endif /* SYNCHRONOUS_INTERRUPTS */
 
 extern void interpret_code (const uint16 *code);
 /* called from asm; hence the need for the asm label, see
    `host_interrupt_status_changed' stub asm in host-native.c */
-extern const uint16 *hash_lookup_code_and_create_if_needed (syn68k_addr_t adr)
-  asm ("_hash_lookup_code_and_create_if_needed");
+extern const uint16 *hash_lookup_code_and_create_if_needed(syn68k_addr_t adr)
+	ASM_NAME("_hash_lookup_code_and_create_if_needed");
 
 extern unsigned long destroy_blocks (syn68k_addr_t low_m68k_address,
 				     uint32 num_bytes);

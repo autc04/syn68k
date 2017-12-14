@@ -578,7 +578,7 @@ output_opcode (uint16 *code, uint32 opcode)
 #ifdef USE_DIRECT_DISPATCH
   *(const void **)code = direct_dispatch_table[opcode];
 #else
-  *(const void **)code = (void *) opcode;
+  *(const void **)code = (void *) (uintptr_t) opcode;
 #endif
   code += OPCODE_WORDS;
   return code;

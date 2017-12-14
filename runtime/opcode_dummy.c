@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 /*
  * s68k_handle_opcode_dummy is used to detect portions of assembly in

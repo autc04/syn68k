@@ -12,7 +12,7 @@ extern uint32 compute_block_checksum (const Block *b);
 #ifdef INLINE_CHECKSUM
 #include "callback.h"
 
-static __inline__ uint32
+static uint32
 inline_compute_block_checksum (const Block *b)
 {
   const uint16 *code;
@@ -24,8 +24,8 @@ inline_compute_block_checksum (const Block *b)
   start = b->m68k_start_address;
   if (IS_CALLBACK (start))
     return (start
-	    + (unsigned long) callback_argument (start)
-	    + (unsigned long) callback_function (start));
+	    + (uintptr_t) callback_argument (start)
+	    + (uintptr_t) callback_function (start));
   else if (start >= MAGIC_ADDRESS_BASE
 	   && start < CALLBACK_STUB_BASE)
     return 0;

@@ -15,8 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <unistd.h>
 #include <errno.h>
+//#include <unistd.h>
 #ifdef NeXT
 #include <bsd/libc.h>
 #endif
@@ -141,9 +141,6 @@ parse_define (SymbolTable *sym, List *new)
 static int
 parse_defopcode (SymbolTable *sym, List *new)
 {
-#if	!defined(__GNUC__)	/* It's not clear which .h file I should */
-  extern void *alloca(int);	/* pull in to get this declaration */
-#endif
   const char *name = NULL;
   List dummy1 = { /* new */ 0, NULL, { /* new->token */ 0 } };
   List dummy2 = { NULL, /* &dummy1 */ 0, { /* new->token */ 0 } };
@@ -537,7 +534,6 @@ string_to_list (const char *string, const char *include_dirs[])
   List *enclosing_list;
   Token t;
   char buf[256];
-  char filename[32] = "/tmp/syngenXXXXXX";
   static int busy_p = FALSE;
   int fd;
 
@@ -548,9 +544,15 @@ string_to_list (const char *string, const char *include_dirs[])
 #if 0
   /* Loses mysteriously under linux.  Be totally paranoid now. */
   temp = tmpfile ();
+#elif _MSC_VER
+  char filename[32] = "syngenXXXXXX";
+  _mktemp(filename);
+  temp = fopen(filename, "w");
+
 #else
-    assert ((fd = mkstemp (filename)) >= 0);
-    temp = fdopen (fd, "w");
+  char filename[32] = "/tmp/syngenXXXXXX";
+  assert ((fd = mkstemp (filename)) >= 0);
+  temp = fdopen (fd, "w");
 #endif
   if (temp == NULL)
     {
@@ -595,11 +597,8 @@ string_to_list (const char *string, const char *include_dirs[])
       close_file ();
       assert (current_stream () != temp);
     }
-#ifdef NeXT
-  remove (filename);
-#else
+
   unlink (filename);
-#endif
 
   busy_p = FALSE;
 
