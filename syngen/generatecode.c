@@ -138,7 +138,6 @@ generate_c_code (const ParsedOpcodeInfo *info, const CCVariant *var,
 
   else    /* If we end a block, profile the next block. */
     {
-/* #if !defined (__alpha) /* FIXME -- TODO -- just use __alpha case for everyone */
 #if SIZEOF_CHAR_P != 8
       fputs ("\n#ifdef PROFILE\n"
 	     "       profile_block (hash_lookup "
