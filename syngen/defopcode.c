@@ -88,12 +88,12 @@ begin_generating_code ()
 
   if (!preprocess_only)
     {
-      FILE *fp = fopen ("syn68k_header.c", "r");
+      FILE *fp = fopen ("syn68k_header.h", "r");
       char buf[1024];
       size_t size;
 
       if (fp == NULL)
-	fatal_error ("Unable to open syn68k_header.c for reading!\n");
+        fatal_error ("Unable to open syn68k_header.h for reading!\n");
 
       /* Copy the C preamble out to syn68k.c. */
       while ((size = fread (buf, 1, 1024, fp)) != 0)

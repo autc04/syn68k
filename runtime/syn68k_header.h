@@ -1,6 +1,3 @@
-#include "config.h"
-
-
 /* #define this value so headers can detect that syn68k.c is including them. */
 #define SYN68K_C
 
