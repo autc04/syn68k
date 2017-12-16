@@ -1,5 +1,3 @@
-#include "config.h"
-
 #include "syn68k_private.h"
 #include "backpatch.h"
 #include "alloc.h"

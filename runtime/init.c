@@ -1,5 +1,3 @@
-#include "config.h"
-
 #include "syn68k_private.h"
 #include "hash.h"
 #include "rangetree.h"
