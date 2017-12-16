@@ -15,7 +15,17 @@ add_library(syn68k
     mapindex.c mapinfo.c syn68k.c opcode_dummy.c
 
     syn68k_header.h
+
+    include/alloc.h         include/deathqueue.h    include/profile.h
+    include/backpatch.h     include/destroyblock.h  include/rangetree.h
+    include/block.h         include/diagnostics.h   include/recompile.h
+    include/blockinfo.h     include/hash.h          include/translate.h
+    include/callback.h      include/interrupt.h     include/trap.h
+    include/ccfuncs.h       include/mapping.h
+    include/checksum.h      include/native.h
 )
 
-target_include_directories(syn68k PUBLIC include ../include ${CMAKE_BINARY_DIR})
-target_compile_definitions(syn68k PRIVATE -DRUNTIME)
+target_include_directories(syn68k PUBLIC include)
+target_compile_definitions(syn68k PRIVATE -DRUNTIME ${SYN68K_CONFIG_FLAGS})
+target_link_libraries(syn68k syn68k-common)
+

@@ -8,5 +8,6 @@ add_executable(syngen
     include/macro.h include/generatecode.h include/list.h include/token.h
     include/defopcode.h)
 
-target_include_directories(syngen PUBLIC include ../include ${CMAKE_BINARY_DIR})
-target_compile_definitions(syngen PRIVATE -DSYNGEN)
+target_include_directories(syngen PUBLIC include)
+target_compile_definitions(syngen PRIVATE -DSYNGEN ${SYN68K_CONFIG_FLAGS})
+target_link_libraries(syngen syn68k-common)
