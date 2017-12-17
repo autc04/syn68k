@@ -684,7 +684,7 @@ extern void initialize_68k_emulator (void (*while_busy)(int), int native_p,
 				     uint32 dos_int_flag_addr);
 
 
-#ifdef NONNATIVE
+#ifdef _MSC_VER
 #define ASM_NAME(x)
 #else
 #define ASM_NAME(x) asm(x)
