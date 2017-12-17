@@ -274,8 +274,7 @@ static uint32 _writeul_unswapped(uint16 *p, uint32 tmp)
    | ((cpu_state.ccx != 0) << 4))
 
 
-/* #if	!defined(__alpha) */
-#if SIZEOF_CHAR_P != 8
+#if SIZEOF_CHAR_P != 8 || !defined(QUADALIGN)
 #define	DEREF(typ, addr)	(*(typ *)addr)
 #else
 

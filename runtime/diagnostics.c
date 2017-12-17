@@ -60,7 +60,7 @@ m68kaddr (const uint16 *pc)
     {
       if (b->compiled_code <= pc)
 	{
-	  unsigned long error = pc - b->compiled_code;
+	  uintptr_t error = pc - b->compiled_code;
 	  if (error < best_error)
 	    {
 	      best_error = error;
