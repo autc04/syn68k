@@ -544,15 +544,15 @@ string_to_list (const char *string, const char *include_dirs[])
 #if 0
   /* Loses mysteriously under linux.  Be totally paranoid now. */
   temp = tmpfile ();
-#elif _MSC_VER
+#elif defined(_MSC_VER)
   char filename[32] = "syngenXXXXXX";
   _mktemp(filename);
   temp = fopen(filename, "w");
 
 #else
   char filename[32] = "/tmp/syngenXXXXXX";
-  assert ((fd = mkstemp (filename)) >= 0);
-  temp = fdopen (fd, "w");
+  fd = mkstemp (filename);
+  temp = fd ? fdopen (fd, "w") : NULL;
 #endif
   if (temp == NULL)
     {
