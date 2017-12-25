@@ -1,4 +1,4 @@
-$Id: NEWS 74 2004-12-30 03:38:55Z ctm $
+
 
 Syn68k now uses automake for all the Makefiles, but we do enough
 things on our own that we're not getting proper dependency tracking

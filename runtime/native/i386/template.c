@@ -2,7 +2,7 @@
 
 #include "template.h"
 
-/* $Id: template.c 61 2004-12-21 23:44:50Z ctm $ */
+
 
 const template_t template[] =
 {
