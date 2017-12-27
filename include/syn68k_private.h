@@ -91,17 +91,10 @@ extern void init_dispatch_table();
 # define BLOCK_INTERRUPTS(save) (save = 0)
 # define RESTORE_INTERRUPTS(save)
 #else  /* !SYNCHRONOUS_INTERRUPTS */
-# ifdef MSDOS
-extern int dos_block_interrupts (void);
-extern void dos_restore_interrupts (int);
-#  define BLOCK_INTERRUPTS(save) (save = dos_block_interrupts ())
-#  define RESTORE_INTERRUPTS(save) dos_restore_interrupts (save)
-# else  /* Not MSDOS */
 #  define SIGNALS_TO_BLOCK (sigmask(SIGALRM) | sigmask(SIGURG) \
 	 		  | sigmask(SIGVTALRM) | sigmask(SIGIO))
 #  define BLOCK_INTERRUPTS(save) (save = sigblock (SIGNALS_TO_BLOCK));
 #  define RESTORE_INTERRUPTS(save) sigsetmask (save)
-# endif /* Not MSDOS */
 #endif  /* !SYNCHRONOUS_INTERRUPTS */
 
 /* Data types. */

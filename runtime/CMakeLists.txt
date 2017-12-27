@@ -10,7 +10,7 @@ add_custom_command(OUTPUT syn68k.c mapindex.c mapinfo.c profileinfo
 add_library(syn68k
     block.c diagnostics.c hash.c rangetree.c translate.c alloc.c
     blockinfo.c trap.c destroyblock.c callback.c init.c interrupt.c
-    profile.c dosinterrupts.c deathqueue.c checksum.c native.c
+    profile.c deathqueue.c checksum.c native.c
     backpatch.c recompile.c
     mapindex.c mapinfo.c syn68k.c opcode_dummy.c
 
