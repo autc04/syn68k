@@ -63,15 +63,11 @@ extern uint8 have_i486_p;
 (((NATIVE_TO_SYNTH_STUB_BYTES + 1) / 2 + 1) & ~1)/* Must be even # of words. */
 
 #ifdef SYNCHRONOUS_INTERRUPTS
-# ifdef USE_BIOS_TIMER
+# if defined (__CHECKER__)
 #  define CHECK_INTERRUPT_STUB_BYTES 18
-# else   /* !USE_BIOS_TIMER */
-#  if defined (__CHECKER__)
-#   define CHECK_INTERRUPT_STUB_BYTES 18
-#  else /* !__CHECKER__ */
-#   define CHECK_INTERRUPT_STUB_BYTES 14
-#  endif /* !__CHECKER__ */
-# endif  /* !USE_BIOS_TIMER */
+# else /* !__CHECKER__ */
+#  define CHECK_INTERRUPT_STUB_BYTES 14
+# endif /* !__CHECKER__ */
 #else
 # define CHECK_INTERRUPT_STUB_BYTES 0
 #endif  /* !SYNCHRONOUS_INTERRUPTS */

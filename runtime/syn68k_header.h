@@ -24,16 +24,6 @@
 # define IFDEBUG(x)
 #endif
 
-
-
-#ifdef USE_BIOS_TIMER
-# define RESTORE_FS() asm volatile ("movw %0,%%fs" \
-				 : : "g" (dos_memory_selector))
-#else
-# define RESTORE_FS()
-#endif
-
-
 /* Do an efficient inline code lookup.  Whenever we get a hit on a hash table
  * entry, we move it to the head of the linked list.  We can just check the
  * head here; if that fails, we can do the slower check and possible compile.
@@ -49,7 +39,6 @@ code_lookup (uint32 addr)
   else
     {
       c = hash_lookup_code_and_create_if_needed (addr);
-      RESTORE_FS ();
     }
   return c;
 }
@@ -385,10 +374,6 @@ interpret_code1 (const uint16 *code, CPUState *cpu_state_ptr, const void ***out_
     goto return_dispatch_table;
 #endif
 
-#ifdef USE_BIOS_TIMER
-  volatile uint16 saved_fs;
-#endif
-
 // #define	CODE_HISTORY	10 
 #if	defined(CODE_HISTORY)
   uint16 lastcodes[CODE_HISTORY];
@@ -417,13 +402,6 @@ interpret_code1 (const uint16 *code, CPUState *cpu_state_ptr, const void ***out_
 #define a7 cpu_state.regs[15]
 
 #define cpu_state (*cpu_state_ptr)  /* To provide more concise code. */
-
-#ifdef USE_BIOS_TIMER
-  asm volatile ("movw %%fs,%0\n\t"
-		"movw %1,%%fs"
-		: "=m" (saved_fs)
-		: "g" (dos_memory_selector));
-#endif  /* USE_BIOS_TIMER */
 
   /* Note that we are currently busy. */
   ++emulation_depth;
@@ -554,10 +532,6 @@ main_loop:
 	CASE_PREAMBLE ("Reserved - exit emulator", "", "", "", "")
 	SAVE_CPU_STATE ();
 	/* Restore stuff (for reentrancy). */
-#ifdef USE_BIOS_TIMER
-  asm volatile ("movw %0,%%fs"
-		: : "m" (saved_fs));
-#endif
 
         --emulation_depth;
 	assert (emulation_depth >= 0);
@@ -925,7 +899,6 @@ main_loop:
 			    (*(uint32 *)(code + PTR_WORDS + PTR_WORDS),
 			     *(void **)(code + PTR_WORDS)));
 	LOAD_CPU_STATE ();
-	RESTORE_FS ();
 	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS));
 
       CASE (0x00B4)

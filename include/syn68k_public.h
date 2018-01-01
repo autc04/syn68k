@@ -61,13 +61,6 @@ extern "C"
  */
 #define SYNCHRONOUS_INTERRUPTS
 
-/* Turn this on if you want to let the BIOS event wait manage the low
- * memory interrupt flag.
- */
-#if 0 && defined (MSDOS) && defined (SYNCHRONOUS_INTERRUPTS)
-# define USE_BIOS_TIMER
-#endif
-
 /* Portability typedefs for signed and unsigned n-bit numbers. */
 
 /* TODO: just use the ones from stdint.h instead of our own */
@@ -150,7 +143,7 @@ typedef struct {
   uint8 filler[3]; /* So we can copy small cpu states w/out boundary cruft. */
 #else /* !MINIMAL_CPU_STATE */
   syn68k_addr_t amode_p, reversed_amode_p;  /* Used in interpreter. */
-#if !defined (USE_BIOS_TIMER) && defined (SYNCHRONOUS_INTERRUPTS)
+#if defined (SYNCHRONOUS_INTERRUPTS)
   volatile int32 interrupt_status_changed; /* High bit set when interrupted. */
 #endif
   jmp_buf *setjmp_buf;
@@ -292,8 +285,14 @@ extern uint32_t US_TO_SYN68K_FUN(uint64 addr);
 	ROMlib for translations of addresses where it's important to preserve
 	the address 0 as 0 */
 
-#define SYN68K_TO_US_CHECK0(addr) ({ __typeof__(addr) t; t = addr; t ? SYN68K_TO_US(t) : (uint16 *) 0; })
-#define US_TO_SYN68K_CHECK0(addr) ({ __typeof__(addr) t; t = addr; t ? US_TO_SYN68K(t) : (uint32) 0; })
+static inline uint16_t * SYN68K_TO_US_CHECK0(uint32_t addr)
+{
+  return addr ? SYN68K_TO_US(addr) : 0;
+}
+static inline uint32_t US_TO_SYN68K_CHECK0(void *addr)
+{
+  return addr ? US_TO_SYN68K(addr) : 0;
+}
 
 /* Macros for byte swapping + specifying signedness.  On a big endian
  * machine, these macros are dummies and don't actually swap bytes.
@@ -624,54 +623,10 @@ extern CPUState cpu_state;
 #define INTERRUPT_STATUS_CHANGED    (-1)
 #define INTERRUPT_STATUS_UNCHANGED  0x7FFFFFFF
 
-#if defined (USE_BIOS_TIMER)
-
-extern uint16 dos_memory_selector;
-extern uint32 dos_interrupt_flag_addr;
-
-# ifdef SYN68K_C
-
-/* If we're in syn68k.c, we know that %fs holds the dos mem selector value. */
-#  define FETCH_INTERRUPT_STATUS()		\
-({						\
-  int32 n;					\
-  asm ("movl %%fs:(%1),%0"			\
-       : "=r" (n)				\
-       : "r" (dos_interrupt_flag_addr));	\
-  n;						\
-})
-#  define SET_INTERRUPT_STATUS(n)			\
-  asm ("movl %0,%%fs:(%1)"				\
-       : : "g" (n), "r" (dos_interrupt_flag_addr))
-# else  /* !SYN68K_C */
-
-/* Temporarily use %fs to reference DOS memory. */
-#  define FETCH_INTERRUPT_STATUS()					\
-({									\
-  int32 n;								\
-  asm ("pushl %%fs\n\t"							\
-       "movw %2,%%fs\n\t"						\
-       "movl %%fs:(%1),%0\n\t"						\
-       "popl %%fs"							\
-       : "=r" (n)							\
-       : "r" (dos_interrupt_flag_addr), "g" (dos_memory_selector));	\
-  n;									\
-})
-#  define SET_INTERRUPT_STATUS(n)			\
-  asm ("pushl %%fs\n\t"					\
-       "movw %2,%%fs\n\t"				\
-       "movl %0,%%fs:(%1)\n\t"				\
-       "popl %%fs"					\
-       : : "g" (n), "r" (dos_interrupt_flag_addr),	\
-       "g" (dos_memory_selector))
-# endif /* !SYN68K_C */
-
-#else /* !USE_BIOS_TIMER */
 #define FETCH_INTERRUPT_STATUS() cpu_state.interrupt_status_changed
 #define SET_INTERRUPT_STATUS(n) \
 ((void) (cpu_state.interrupt_status_changed = (n)))
 
-#endif /* !USE_BIOS_TIMER */
 
 #define INTERRUPT_PENDING() (FETCH_INTERRUPT_STATUS () < 0)
 
