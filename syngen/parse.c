@@ -16,9 +16,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-//#include <unistd.h>
-#ifdef NeXT
-#include <bsd/libc.h>
+#ifndef WIN32
+#include <unistd.h>
 #endif
 
 static List *parse_expression (void);

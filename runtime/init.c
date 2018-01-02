@@ -16,7 +16,8 @@
 #endif   /* USE_BIOS_TIMER */
 #include <assert.h>
 #include <string.h>
-
+#include <stdio.h>
+#include <stdlib.h>
 
 /* Global CPU state struct. */
 CPUState cpu_state;

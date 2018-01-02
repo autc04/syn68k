@@ -29,11 +29,7 @@ dump_cpu_state (void)
   for (i = 0; i < 16; i++)
     {
 
-#if	!defined(__alpha)
-      printf ("%c%d = 0x%08lX ", "da"[i >> 3], i % 8, cpu_state.regs[i].ul.n);
-#else
       printf ("%c%d = 0x%08X ", "da"[i >> 3], i % 8, cpu_state.regs[i].ul.n);
-#endif
 
       if ((i & 3) == 3)
 	fputs ("\n\t", stdout);

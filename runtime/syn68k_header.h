@@ -521,7 +521,7 @@ main_loop:
       /* Default to printing error message. */
       default:
 	fprintf (stderr, "Internal error: unknown synthetic opcode 0x%04X; "
-		 "code = %p\n", (unsigned) (((void **) code)[-1]),
+		 "code = %p\n", (unsigned) (uintptr_t) (((void **) code)[-1]),
 		 (void *) code);
 	abort ();
 	break;
