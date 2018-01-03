@@ -160,15 +160,6 @@ typedef struct {
 #endif /* !MINIMAL_CPU_STATE */
 } CPUState;
 
-
-/* This lets us put syn68k.c's global register variable before the
- * inline functions in this file, since that is an error.
- */
-#if defined (GLOBAL_REGISTER_DECLS)
-GLOBAL_REGISTER_DECLS
-#endif
-
-
 #define EM_DREG(X) (cpu_state.regs[X].ul.n)
 #define EM_AREG(X) (cpu_state.regs[8 + (X)].ul.n)
 #define EM_D0 EM_DREG (0)
