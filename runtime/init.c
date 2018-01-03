@@ -10,10 +10,6 @@
 #include "checksum.h"
 #include "deathqueue.h"
 #include "interrupt.h"
-#ifdef USE_BIOS_TIMER
-#include "go32.h"
-#include "dpmi.h"
-#endif   /* USE_BIOS_TIMER */
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -77,11 +73,6 @@ initialize_68k_emulator (void (*while_busy)(int), int native_p,
   cpu_state.usp = 0xDEADF00D;  /* Never use this stack pointer! */
   cpu_state.msp = 0xDEAD0666;  /* Never use this stack pointer! */
 
-#ifdef USE_BIOS_TIMER
-  dos_memory_selector = _go32_conventional_mem_selector ();
-  assert (dos_int_flag_addr != 0);
-  dos_interrupt_flag_addr = dos_int_flag_addr;
-#endif  /* USE_BIOS_TIMER */
   
 #ifdef SYNCHRONOUS_INTERRUPTS
   SET_INTERRUPT_STATUS (INTERRUPT_STATUS_UNCHANGED);

@@ -4,10 +4,6 @@
 
 #include "trap.h"
 
-#ifdef USE_BIOS_TIMER
-uint16 dos_memory_selector;
-uint32 dos_interrupt_flag_addr;
-#endif
 
 
 void
@@ -74,15 +70,6 @@ interrupt_process_any_pending (syn68k_addr_t interrupt_pc)
 	priority = -1;
     }
 
-#ifdef USE_BIOS_TIMER
-  /* The BIOS has no way of specifying the interrupt priority when
-   * an interrupt comes in.  Therefore if we don't see any other
-   * explicitly specified interrupts, we'll assume it must have been
-   * a timer interrupt and act accordingly.
-   */
-  if (priority == -1 && cpu_priority < M68K_TIMER_PRIORITY)
-    priority = M68K_TIMER_PRIORITY;
-#endif
   
   /* Did we find an interrupt of high enough priority? */
   if (priority != -1)

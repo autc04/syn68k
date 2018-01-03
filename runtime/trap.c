@@ -203,11 +203,6 @@ trap_direct (uint32 trap_number, uint32 exception_pc,
   else  /* Otherwise, trap back to m68k space. */
     retval = trap_addr;
 
-#ifdef USE_BIOS_TIMER
-  /* Just to be safe, guarantee that %fs points to conventional memory. */
-  asm volatile ("movw %0,%%fs"
-		: : "g" (dos_memory_selector));
-#endif  /* USE_BIOS_TIMER */
 
   return retval;
 }

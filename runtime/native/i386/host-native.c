@@ -61,14 +61,6 @@ host_backpatch_native_to_synth_stub (Block *b, host_code_t *stub,
  * INTERRUPT_STATUS_UNCHANGED >= %ebp.  We overwrite some of the
  * constant operands when we backpatch the stub.
  */
-#ifdef USE_BIOS_TIMER
-host_code_t check_interrupt_stub[] =
-{
-  0x64, 0x39, 0x2D, 0x78, 0x56, 0x34, 0x12,   /* cmpl %ebp,%fs:0x12345678 */
-  0xB8, 0x78, 0x56, 0x34, 0x12,               /* movl $my_m68k_pc,%eax    */
-  0x0F, 0x88, 0x78, 0x56, 0x34, 0x12,         /* js host_interrupt_...    */
-};
-#else  /* !USE_BIOS_TIMER */
 host_code_t check_interrupt_stub[] =
 {
 #ifdef __CHECKER__
@@ -82,7 +74,6 @@ host_code_t check_interrupt_stub[] =
   0x0F, 0x88, 0x78, 0x56, 0x34, 0x12,   /* js host_interrupt_...  */
 #endif /* !__CHECKER__ */
 };
-#endif  /* !USE_BIOS_TIMER */
 
 
 /* This is just here to fool the C compiler. */
@@ -100,9 +91,6 @@ extern host_code_t host_interrupt_status_changed[]
 asm (".text\n\t"
      ".align 4\n"
      "_host_interrupt_status_changed:\n\t"
-#ifdef USE_BIOS_TIMER
-     "pushl %fs\n\t"
-#endif
      "pushl %eax\n\t"
      "call _interrupt_process_any_pending\n\t"
      "pushl %eax\n\t"
@@ -111,9 +99,6 @@ asm (".text\n\t"
      "addl $8,%esp\n\t"
      "movl (%eax),%eax\n\t"
      "addl $4,%esi\n\t"
-#ifdef USE_BIOS_TIMER
-     "popl %fs\n\t"
-#endif
      "jmp *%eax");
 
 
@@ -186,16 +171,12 @@ host_native_code_init ()
 	  && INTERRUPT_STATUS_UNCHANGED >= ((int32) &cpu_state));
 #endif
 
-#ifdef USE_BIOS_TIMER
-  *(uint32 *)(&check_interrupt_stub[3]) = dos_interrupt_flag_addr;
-#else   /* !USE_BIOS_TIMER */
   assert (offsetof (CPUState, interrupt_status_changed) < 128);
 # ifdef __CHECKER__
   *(void **)(&check_interrupt_stub[2]) = &cpu_state.interrupt_status_changed;
 # else /* !__CHECKER__ */
   check_interrupt_stub[2] = offsetof (CPUState, interrupt_status_changed);
 # endif /* !__CHECKER__ */
-#endif  /* !USE_BIOS_TIMER */
 
 #endif  /* SYNCHRONOUS_INTERRUPTS */
 }
