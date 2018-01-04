@@ -252,17 +252,10 @@ extern uint64 ROMlib_sizes[OFFSET_TABLE_SIZE];
 
 #define ROMlib_offset (ROMlib_offsets[0])
 
-#if 1
 static inline uint16* SYN68K_TO_US(uint32_t addr)
 {
 	return (uint16 *)((uint64)addr + ROMlib_offsets[addr >> (32 - OFFSET_TABLE_BITS)]);
 }
-#else
-#define SYN68K_TO_US(addr) ({ \
-  uint32 _addr = addr; \
-  (uint16 *) ((uint64)_addr + ROMlib_offsets[_addr >> (32-OFFSET_TABLE_BITS)]); \
-})
-#endif
 
 // TODO: inline something
 #define US_TO_SYN68K(addr) (US_TO_SYN68K_FUN((uint64)(addr)))
