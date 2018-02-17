@@ -273,7 +273,7 @@ static inline uint16_t * SYN68K_TO_US_CHECK0(uint32_t addr)
 {
   return addr ? SYN68K_TO_US(addr) : 0;
 }
-static inline uint32_t US_TO_SYN68K_CHECK0(void *addr)
+static inline uint32_t US_TO_SYN68K_CHECK0(const void *addr)
 {
   return addr ? US_TO_SYN68K(addr) : 0;
 }
