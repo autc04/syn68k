@@ -9,5 +9,5 @@ add_executable(syngen
     include/defopcode.h)
 
 target_include_directories(syngen PUBLIC include)
-target_compile_definitions(syngen PRIVATE -DSYNGEN ${SYN68K_CONFIG_FLAGS})
+target_compile_definitions(syngen PRIVATE SYNGEN ${SYN68K_CONFIG_FLAGS})
 target_link_libraries(syngen syn68k-common)

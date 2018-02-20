@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.9)
 project(Syn68K)
 
-set(NONNATIVE "#define NONNATIVE")
+set(SYN68K_NONDIRECT ON CACHE BOOL "Use standard switch instead of computed goto - saves compile time with clang")
+
 include_directories(${CMAKE_CURRENT_DIRECTORY})
 
 if(MSVC)
@@ -16,7 +17,7 @@ add_custom_target(syn68k-common-headers SOURCES
     include/syn68k_private.h
     include/syn68k_public.h include/safe_alloca.h)
 
-set(SYN68K_CONFIG_FLAGS -DNONNATIVE -DNONDIRECT)
+set(SYN68K_CONFIG_FLAGS NONNATIVE $<$<BOOL:${SYN68K_NONDIRECT}>:NONDIRECT>)
 
 add_subdirectory(syngen)
 add_subdirectory(runtime)

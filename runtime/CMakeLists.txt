@@ -26,6 +26,6 @@ add_library(syn68k
 )
 
 target_include_directories(syn68k PUBLIC include)
-target_compile_definitions(syn68k PRIVATE -DRUNTIME ${SYN68K_CONFIG_FLAGS})
+target_compile_definitions(syn68k PRIVATE RUNTIME ${SYN68K_CONFIG_FLAGS})
 target_link_libraries(syn68k syn68k-common)
 
