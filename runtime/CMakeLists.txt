@@ -25,6 +25,11 @@ add_library(syn68k
     include/checksum.h      include/native.h
 )
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+set_source_files_properties(syn68k.c PROPERTIES COMPILE_FLAGS
+    "-Wno-parentheses-equality -Wno-unused-value -Wno-constant-logical-operand")
+endif()
+
 target_include_directories(syn68k PRIVATE include)
 target_compile_definitions(syn68k PRIVATE RUNTIME ${SYN68K_CONFIG_FLAGS})
 target_link_libraries(syn68k syn68k-common)
