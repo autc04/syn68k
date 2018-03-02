@@ -110,7 +110,7 @@ done_generating_code ()
 {
   if (!preprocess_only)
     {
-      long i, max_opcode = -1;
+      long i;
 
 
 			/* Output the end of the interpreter function. */
@@ -1773,7 +1773,7 @@ reserve_synthetic_ops (OpcodeMappingInfo *maps, int num_variants, int variant,
     }
 }
 
-
+#ifndef M68K_REGS_IN_ARRAY
 static BOOL
 has_unexpanded_register_lvalue (List *code, const char *opcode_bits,
 				const char *bits_to_expand, int *index)
@@ -1805,7 +1805,7 @@ has_unexpanded_register_lvalue (List *code, const char *opcode_bits,
 	  || has_unexpanded_register_lvalue (code->cdr, opcode_bits,
 					     bits_to_expand, index));
 }
-
+#endif
 
 static void
 delete_field (List *code, int field_number, int val)
