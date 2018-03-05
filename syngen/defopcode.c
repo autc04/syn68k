@@ -32,10 +32,12 @@ static void reserve_synthetic_ops (OpcodeMappingInfo *maps, int num_variants,
 				   int variant, int num_variant_mapping_sets,
 				   List *isect_list, int literal_bits,
 				   int literal_bits_mask);
+#ifndef M68K_REGS_IN_ARRAY
 static BOOL has_unexpanded_register_lvalue (List *code,
 					    const char *opcode_bits,
 					    const char *bits_to_expand,
 					    int *index);
+#endif
 static void delete_field (List *code, int field_number, int val);
 static void replace_dollar_number_with_list (List *code, int field,
 					     List *list);
