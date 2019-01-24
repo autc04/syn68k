@@ -25,9 +25,9 @@ typedef struct {
 
 static ExprInfo expr_info (const List *expr, ByteOrder hint,
 			   ExprInfo *field_info);
-static ByteSize expr_list_max_size (List *ls, ByteSize hint,
+static ByteSize expr_list_max_size (List *ls, ByteOrder hint,
 				    ExprInfo *field_info);
-static BOOL expr_list_any_are_unsigned (List *ls, ByteSize hint,
+static BOOL expr_list_any_are_unsigned (List *ls, ByteOrder hint,
 					ExprInfo *field_info);
 static void endianness (List *code, ByteSize desired_size, ByteOrder hint,
 			BOOL strong_hint, ExprInfo *field_info);
@@ -117,7 +117,7 @@ compute_operand_info (OperandInfo *op, const ParsedOpcodeInfo *p,
   /* Recursively set/determine the endianness of all expressions and
    * add in swap's where appropriate.
    */
-  endianness (v->code, BO_UNKNOWN, BO_NATIVE, FALSE, field_info);
+  endianness (v->code, BS_UNKNOWN, BO_NATIVE, FALSE, field_info);
 
   /* For all of the fields that weren't expanded, create bitfield
    * information for them and create a declaration.
@@ -468,7 +468,7 @@ endianness (List *code, ByteSize desired_size, ByteOrder hint,
 	/* Process all of the boolean things.  Don't care about endianness. */
 	for (l2 = CDAR (code); l2 != NULL; l2 = l2->cdr)
 	  {
-	    endianness (l2, BO_UNKNOWN, BO_NATIVE, FALSE, field_info);
+	    endianness (l2, BS_UNKNOWN, BO_NATIVE, FALSE, field_info);
 	  }
 	break;
 
@@ -592,7 +592,7 @@ expr_info (const List *expr, ByteOrder hint, ExprInfo *field_info)
 
   case TOK_NUMBER:
     info.order = BO_NATIVE;
-    info.size  = BO_UNKNOWN;
+    info.size  = BS_UNKNOWN;
     info.sgnd  = TRUE;
     break;
 
@@ -791,9 +791,9 @@ expr_info (const List *expr, ByteOrder hint, ExprInfo *field_info)
 
 
 static ByteSize
-expr_list_max_size (List *ls, ByteSize hint, ExprInfo *field_info)
+expr_list_max_size (List *ls, ByteOrder hint, ExprInfo *field_info)
 {
-  ByteSize s = BO_UNKNOWN;
+  ByteSize s = BS_UNKNOWN;
 
   for (; ls != NULL; ls = ls->cdr)
     {
@@ -807,7 +807,7 @@ expr_list_max_size (List *ls, ByteSize hint, ExprInfo *field_info)
 
 
 static BOOL
-expr_list_any_are_unsigned (List *ls, ByteSize hint, ExprInfo *field_info)
+expr_list_any_are_unsigned (List *ls, ByteOrder hint, ExprInfo *field_info)
 {
   for (; ls != NULL; ls = ls->cdr)
     {
