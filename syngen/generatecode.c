@@ -524,10 +524,10 @@ generate_code_for_list (List *ls, int m68kop, const ParsedOpcodeInfo *info,
 	static const char *swap_macro[2][2][5] = {
 	  {{ "ERR", "((uint8) (", "(SWAPUW_IFLE (", "ERR", "(SWAPUL_IFLE (" },
 	   { "ERR", "((int8) (",  "(SWAPSW_IFLE (", "ERR", "(SWAPSL_IFLE (" }},
-	  {{ "ERR", "((uint8) (", "(SLOW_SWAPUW_IFLE (", "ERR",
-	       "(SLOW_SWAPUL_IFLE (" },
-	   { "ERR", "((int8) (",  "(SLOW_SWAPSW_IFLE (", "ERR",
-	       "(SLOW_SWAPSL_IFLE (" }}
+	  {{ "ERR", "((uint8) (", "(SWAPUW_IFLE (", "ERR",
+	       "(SWAPUL_IFLE (" },
+	   { "ERR", "((int8) (",  "(SWAPSW_IFLE (", "ERR",
+	       "(SWAPSL_IFLE (" }}
 	};
 
 	fputs (swap_macro[(ls->cdr->token.type == TOK_NUMBER)]

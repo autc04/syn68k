@@ -289,119 +289,16 @@ static inline uint32_t US_TO_SYN68K_CHECK0(const void *addr)
 #define SWAPUB(val) ((uint8) (val))   /* Here for symmetry. */
 #define SWAPSB(val) ((int8)  (val))
 
-#if defined (CWV) && defined (CLV)
-#define ROMlib_SwapShort(n)	CWV ((uint16) (n))
-#define ROMlib_SwapLong(n)	CLV ((uint32) (n))
-#define SWAPUW(n)		CWV ((uint16) (n))
-#define SWAPUL(n)		CLV ((uint32) (n))
-#elif defined(i386)
-
-static inline uint16
-ROMlib_SwapShort (unsigned short us) __attribute__ ((const));
-
-static inline uint16
-ROMlib_SwapShort (unsigned short us)
-{
-    uint16 retval;
-    asm ("rorw $8,%w0" : "=r" (retval) : "0" (us) : "cc");
-    return retval;
-}
-
-static inline uint32
-ROMlib_SwapLong (uint32 ul) __attribute__ ((const));
-
-static inline uint32
-ROMlib_SwapLong (uint32 ul)
-{
-    uint32 retval;
-#if defined (NeXT) || defined (USE_BSWAP) || defined (ALWAYS_ON_I486)
-    asm ("bswap %0" : "=r" (retval) : "0" (ul));
-#else
-    asm ("rorw $8,%w0\n\t"
-	 "rorl $16,%k0\n\t"
-	 "rorw $8,%w0"
-	 : "=r" (retval) : "0" (ul) : "cc");
-#endif
-    return retval;
-}
-
-# define SWAPUW(val) ROMlib_SwapShort(val)
-# define SWAPUL(val) ROMlib_SwapLong(val)
-
-#elif 0 && defined(__alpha)
-
-static inline unsigned short const
-ROMlib_SwapShort (unsigned short us)
-{
-    unsigned short retval;
-
-    asm("extbl   %1, 1, $2\n\t"		/* r2 = 0x0A */
-        "sll     %1, 8, %0\n\t"		/* %0 = 0xB0 */
-	"or	 %0, $2, %0"		/* %0 = 0xBA */
-
-	: "=r" (retval) : "r" (us) : "$2");
-
-    return retval;
-}
-
-static inline uint32 const
-ROMlib_SwapLong (uint32 ul)
-{
-    uint32 retval;
-
-    asm("extbl   %1, 3, $2\n\t"		/* r2 = 0x000A */
-        "sll     %1, 24, $3\n\t"	/* r3 = 0xD000 */
-
-        "srl     %1, 8, $5\n\t"		/* r5 = 0x0ABC */
-        "and     %1, 65280, %0\n\t"	/* %0 = 0x00C0 */
-
-        "or      $2, $3, $4\n\t"	/* r4 = 0xD00A */
-        "and     $5, 65280, $6\n\t"	/* r6 = 0x00B0 */
-
-        "sll     %0, 8, %0\n\t"		/* %0 = 0x0C00 */
-        "or      $4, $6, $7\n\t"	/* r7 = 0xD0BA */
-
-        "or      $7, %0, %0"		/* %0 = 0xDCBA */
-
-	: "=r" (retval) : "r" (ul) : "$2", "$3", "$4", "$5", "$6", "$7");
-
-    return retval;
-}
-
-# define SWAPUW(val) ROMlib_SwapShort(val)
-# define SWAPUL(val) ROMlib_SwapLong(val)
-
-#elif defined(LITTLEENDIAN)
-
-#if defined(__GNUC__)
-# define SWAPUW(val) ({ uint16 _v = (val); (uint16) ((_v >> 8) | (_v << 8)); })
-# define SWAPUL(val)                                        \
-({ uint32 _v = (val);                                       \
-   (uint32) ((_v >> 24) | (_v << 24) | ((_v >> 8) & 0xFF00) \
-	     | ((_v & 0xFF00) << 8));                       \
- })
-#else
-
-static uint16 _swapuw(uint16 v)
+static inline uint16_t SWAPUW(uint16_t v)
 {
     return (v >> 8) | (v << 8);
 }
 
-#define SWAPUW(val) _swapuw(val)
-
-static uint32 _swapul(uint32 v)
+static inline uint32_t SWAPUL(uint32_t v)
 {
    return (v >> 24) | (v << 24) | ((v >> 8) & 0xFF00) | ((v & 0xFF00) << 8);
 }
 
-#define SWAPUL(val) _swapul(val)
-
-#endif
-
-#define ROMlib_SwapShort(val) SWAPUW(val)
-#define ROMlib_SwapLong(val) SWAPUL(val)
-
-#endif
 #define SWAPSW(val) ((int16) SWAPUW (val))
 #define SWAPSL(val) ((int32) SWAPUL (val))
 
@@ -419,56 +316,6 @@ static uint32 _swapul(uint32 v)
 # define SWAPUL_IFLE(n) SWAPUL(n)
 # define SWAPSL_IFLE(n) SWAPSL(n)
 #endif
-
-
-/* The "slow" variants are here to facilitate compile-time reduction of
- * swapped constants.  The non-slow versions may use inline assembly, which
- * the C compiler won't be able to deal with, but the slow versions are
- * guaranteed to use standard C operators.  You would only want to use the
- * slow versions for swapping constants.
- */
-#define SLOW_SWAPUB(val) ((uint8) (val))   /* Here for symmetry. */
-#define SLOW_SWAPSB(val) ((int8)  (val))
-
-#if defined(__GNUC__)
-#define SLOW_SWAPUW(val) \
-({ uint16 _v = (val); (uint16) ((_v >> 8) | (_v << 8)); })
-#else
-#define SLOW_SWAPUW(v) ((uint16) (((v) >> 8) | ((v) << 8)))
-#endif
-
-#define SLOW_SWAPSW(val) ((int16) SLOW_SWAPUW (val))
-
-#if defined(__GNUC__)
-#define SLOW_SWAPUL(val)                                    \
-({ uint32 _v = (val);                                       \
-   (uint32) ((_v >> 24) | (_v << 24) | ((_v >> 8) & 0xFF00) \
-	     | ((_v & 0xFF00) << 8));                       \
- })
-#else
-#define SLOW_SWAPUL(v) ((uint32) (((v) >> 24) | \
-				  ((v) << 24) | \
-				 (((v) >> 8) & 0xFF00) | \
-				 (((v) & 0xFF00) << 8)))
-#endif
-
-#define SLOW_SWAPSL(val) ((int32) SLOW_SWAPUL (val))
-
-#define SLOW_SWAPUB_IFLE(n) ((uint8) (n))   /* Here for symmetry. */
-#define SLOW_SWAPSB_IFLE(n) ((int8)  (n))
-
-#if defined (BIGENDIAN)
-# define SLOW_SWAPUW_IFLE(n) ((uint16) (n))
-# define SLOW_SWAPSW_IFLE(n) ((int16)  (n))
-# define SLOW_SWAPUL_IFLE(n) ((uint32) (n))
-# define SLOW_SWAPSL_IFLE(n) ((int32)  (n))
-#else /* LITTLEENDIAN */
-# define SLOW_SWAPUW_IFLE(n) SLOW_SWAPUW(n)
-# define SLOW_SWAPSW_IFLE(n) SLOW_SWAPSW(n)
-# define SLOW_SWAPUL_IFLE(n) SLOW_SWAPUL(n)
-# define SLOW_SWAPSL_IFLE(n) SLOW_SWAPSL(n)
-#endif
-
 
 /* Handy memory access macros.  These implicity refer to the 68k addr space
    except for the _US variants that refer to the native address space.*/
