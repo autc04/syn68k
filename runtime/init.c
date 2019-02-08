@@ -24,6 +24,7 @@ uint32 ROMlib_offset;
 uint64 ROMlib_offsets[OFFSET_TABLE_SIZE];
 uint64 ROMlib_sizes[OFFSET_TABLE_SIZE] = {0x3FFFFFFF, 0x3FFFFFFF, 0x3FFFFFFF, 0x3FFFFFFF};
 #endif
+DebuggerCallbacks syn68k_debugger_callbacks = {0,0};
 
 /* This function initializes syn68k.  Call it exactly once, before any
  * other syn68k calls.  DOS_INT_FLAG_ADDR is the conventional memory

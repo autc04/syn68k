@@ -196,6 +196,13 @@ extern uint16 callback_dummy_address_space[];
 #define MAGIC_EXIT_EMULATOR_ADDRESS (MAGIC_ADDRESS_BASE + 0)
 #define MAGIC_RTE_ADDRESS           (MAGIC_ADDRESS_BASE + 2)
 
+typedef struct {
+    uint32_t (*debugger)(uint32_t addr);
+    uint32_t (*getNextBreakpoint)(uint32_t addr);
+} DebuggerCallbacks;
+
+extern DebuggerCallbacks syn68k_debugger_callbacks;
+
 /* Address bits that have meaning, for the CLEAN() macro, below. */
 #define LEGAL_ADDRESS_BITS 0xFFFFFFFFUL
 
