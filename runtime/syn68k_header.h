@@ -566,10 +566,15 @@ main_loop:
 	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS + 1));
 #endif /* !GENERATE_NATIVE_CODE */
 
-      /* Reserved - two word NOP. */
+      /* Debugger breakpoint or single-step. */
       CASE (0x0002)
-	/* Historical cruft. */
-	CASE_PREAMBLE ("Reserved: 2 word NOP", "", "", "", "")
+	CASE_PREAMBLE ("Debugger breakpoint or single-step", "", "", "", "")
+	if(syn68k_debugger_callbacks.debugger)
+	  {
+	    SAVE_CPU_STATE ();
+	    code = code_lookup( syn68k_debugger_callbacks.debugger(*(uint32_t*)code) );
+	    LOAD_CPU_STATE ();
+	  }
 	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS + 1));
 	
       /* Reserved - skip stub NOP. */

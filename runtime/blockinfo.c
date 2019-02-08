@@ -83,6 +83,16 @@ compute_block_info (Block *b, const uint16 *code, TempBlockInfo *temp)
       /* Move on to the next instruction. */
       old_code = code;
       code += insn_size;
+
+      if(syn68k_debugger_callbacks.getNextBreakpoint)
+	{
+	  uint32_t addr = US_TO_SYN68K(old_code);
+	  uint32_t break_addr = syn68k_debugger_callbacks.getNextBreakpoint(addr);
+	  if(break_addr <= addr + insn_size)
+	    {
+	      break;
+	    }
+	}
     }
   while (!map->ends_block);
 
