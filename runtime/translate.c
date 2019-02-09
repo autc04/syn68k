@@ -320,18 +320,6 @@ generate_code (Block *b, TempBlockInfo *tbi, BOOL try_native_p)
   /* Loop over all instructions, in forwards order, and compile them. */
   m68k_code = SYN68K_TO_US (b->m68k_start_address);
 
-  if(syn68k_debugger_callbacks.getNextBreakpoint)
-    {
-      uint32_t break_addr = syn68k_debugger_callbacks.getNextBreakpoint(b->m68k_start_address);
-      if(b->m68k_start_address == break_addr)
-        {
-	  uint8_t *p = (uint8_t*)output_opcode((uint16*)(code + num_code_bytes), 0x0002);
-	  *(uint32_t*)p = b->m68k_start_address;
-	  p += 4;
-	  num_code_bytes = p - code;
-	}
-    }
-
 #ifdef GENERATE_NATIVE_CODE
   prev_native_p = TRUE;   /* So n->s stub will be generated if necessary. */
 #endif /* GENERATE_NATIVE_CODE */
@@ -532,18 +520,15 @@ generate_code (Block *b, TempBlockInfo *tbi, BOOL try_native_p)
       prev_native_p = native_p;
 #endif /* GENERATE_NATIVE_CODE */
     }
-   if(syn68k_debugger_callbacks.getNextBreakpoint)
+   
+  if (tbi->break_at_end)
     {
-      uint32_t addr = US_TO_SYN68K(m68k_code);
-      uint32_t break_addr = syn68k_debugger_callbacks.getNextBreakpoint(addr - 1);
-      if(break_addr == addr)
-        {
-	  uint8_t *p = (uint8_t*)output_opcode((uint16*)(code + num_code_bytes), 0x0002);
-	  *(uint32_t*)p = b->m68k_start_address;
-	  p += 4;
-	  num_code_bytes = p - code;
-	}
+      uint8_t *p = (uint8_t*)output_opcode((uint16*)(code + num_code_bytes), 0x0002);
+      *(uint32_t*)p = US_TO_SYN68K(m68k_code);
+      p += 4;
+      num_code_bytes = p - code;
     }
+
   /* Copy the code we just created over to the block.  We allocate a little
    * extra space because we prepend all compiled code with the big-endian
    * 68k PC of the first instruction, in case we hit an interrupt when

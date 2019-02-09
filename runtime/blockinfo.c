@@ -24,6 +24,7 @@ compute_block_info (Block *b, const uint16 *code, TempBlockInfo *temp)
   int clobbered = 0, may_set = 0, may_not_set = ALL_CCS, needed = 0;
   int next_array_size;
   const OpcodeMappingInfo *map = NULL;
+  uint32_t break_addr = 0xFFFFFFFF;
 
   /* Initialize the next offset array.  This lets us step through this
    * code forwards when we actually get around to compiling it.
@@ -31,6 +32,13 @@ compute_block_info (Block *b, const uint16 *code, TempBlockInfo *temp)
   temp->num_68k_instrs = 0;
   next_array_size = 16;
   temp->next_instr_offset = (int8 *) xmalloc (next_array_size * sizeof (int8));
+  temp->break_at_end = false;
+
+  if(syn68k_debugger_callbacks.getNextBreakpoint)
+    {
+      uint32_t addr = US_TO_SYN68K(code);
+      break_addr = syn68k_debugger_callbacks.getNextBreakpoint(addr);
+    }
 
   /* Loop over all instructions in the block and determine information
    * about how this block deals with CC bits.
@@ -40,8 +48,12 @@ compute_block_info (Block *b, const uint16 *code, TempBlockInfo *temp)
     {
       int insn_size;
       unsigned m68k_op;
+      uint32_t addr = US_TO_SYN68K (code);
 
-      m68k_op = READUW (US_TO_SYN68K (code));
+      if (addr >= break_addr)
+        break;
+
+      m68k_op = READUW (addr);
       map = &opcode_map_info[opcode_map_index[m68k_op]];
 
 #if 0
@@ -83,24 +95,22 @@ compute_block_info (Block *b, const uint16 *code, TempBlockInfo *temp)
       /* Move on to the next instruction. */
       old_code = code;
       code += insn_size;
-
-      if(syn68k_debugger_callbacks.getNextBreakpoint)
-	{
-	  uint32_t addr = US_TO_SYN68K(old_code);
-	  uint32_t break_addr = syn68k_debugger_callbacks.getNextBreakpoint(addr);
-	  if(break_addr <= addr + insn_size)
-	    {
-	      break;
-	    }
-	}
     }
   while (!map->ends_block);
 
   /* Terminate the array with a 0 offset. */
   temp->next_instr_offset[temp->num_68k_instrs] = 0;
 
-  /* Figure out where this block goes (if possible). */
-  determine_next_block_addresses (old_code, temp, map);
+  if (US_TO_SYN68K (code) >= break_addr)
+    {
+      temp->num_child_blocks = 0;
+      temp->break_at_end = true;
+    }
+  else
+    {
+      /* Figure out where this block goes (if possible). */
+      determine_next_block_addresses (old_code, temp, map);
+    }
 
   /* Record the block information we've computed. */
   b->cc_clobbered       = clobbered;

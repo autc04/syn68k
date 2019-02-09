@@ -575,7 +575,14 @@ main_loop:
 	    code = code_lookup( syn68k_debugger_callbacks.debugger(*(uint32_t*)code) );
 	    LOAD_CPU_STATE ();
 	  }
-	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS + 1));
+	else
+	  {
+	    // We should never get here, (callbacks.getNextBreakpoint set
+	    // but callbacks.debugger cleared). But if we do, it's not a prolbem.
+	    code = code_lookup(*(uint32_t*)code);
+	  }
+	
+	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS));
 	
       /* Reserved - skip stub NOP. */
       CASE (0x0003)
