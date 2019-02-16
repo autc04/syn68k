@@ -25,6 +25,7 @@ compute_block_info (Block *b, const uint16 *code, TempBlockInfo *temp)
   int next_array_size;
   const OpcodeMappingInfo *map = NULL;
   uint32_t break_addr = 0xFFFFFFFF;
+  bool breakpoint = false;
 
   /* Initialize the next offset array.  This lets us step through this
    * code forwards when we actually get around to compiling it.
@@ -51,7 +52,10 @@ compute_block_info (Block *b, const uint16 *code, TempBlockInfo *temp)
       uint32_t addr = US_TO_SYN68K (code);
 
       if (addr >= break_addr)
-        break;
+        {
+	  breakpoint = true;
+	  break;
+	}
 
       m68k_op = READUW (addr);
       map = &opcode_map_info[opcode_map_index[m68k_op]];
@@ -101,7 +105,7 @@ compute_block_info (Block *b, const uint16 *code, TempBlockInfo *temp)
   /* Terminate the array with a 0 offset. */
   temp->next_instr_offset[temp->num_68k_instrs] = 0;
 
-  if (US_TO_SYN68K (code) >= break_addr)
+  if (breakpoint)
     {
       temp->num_child_blocks = 0;
       temp->break_at_end = true;
