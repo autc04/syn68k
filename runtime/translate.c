@@ -69,6 +69,8 @@ typedef struct
 static void compute_maps_and_ccs (Block *b, MapAndCC *m,
 				  const TempBlockInfo *tbi);
 
+static inline uint16 * output_opcode (uint16 *code, uint32 opcode);
+
 
 /* Compiles a block at a specified address and returns a mask indicating
  * which cc bits must be valid on entry to this block.  The block is placed
@@ -317,6 +319,7 @@ generate_code (Block *b, TempBlockInfo *tbi, BOOL try_native_p)
 
   /* Loop over all instructions, in forwards order, and compile them. */
   m68k_code = SYN68K_TO_US (b->m68k_start_address);
+
 #ifdef GENERATE_NATIVE_CODE
   prev_native_p = TRUE;   /* So n->s stub will be generated if necessary. */
 #endif /* GENERATE_NATIVE_CODE */
@@ -516,6 +519,14 @@ generate_code (Block *b, TempBlockInfo *tbi, BOOL try_native_p)
 #ifdef GENERATE_NATIVE_CODE
       prev_native_p = native_p;
 #endif /* GENERATE_NATIVE_CODE */
+    }
+   
+  if (tbi->break_at_end)
+    {
+      uint8_t *p = (uint8_t*)output_opcode((uint16*)(code + num_code_bytes), 0x0002);
+      *(uint32_t*)p = US_TO_SYN68K(m68k_code);
+      p += 4;
+      num_code_bytes = p - code;
     }
 
   /* Copy the code we just created over to the block.  We allocate a little

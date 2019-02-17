@@ -566,11 +566,23 @@ main_loop:
 	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS + 1));
 #endif /* !GENERATE_NATIVE_CODE */
 
-      /* Reserved - two word NOP. */
+      /* Debugger breakpoint or single-step. */
       CASE (0x0002)
-	/* Historical cruft. */
-	CASE_PREAMBLE ("Reserved: 2 word NOP", "", "", "", "")
-	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS + 1));
+	CASE_PREAMBLE ("Debugger breakpoint or single-step", "", "", "", "")
+	if(syn68k_debugger_callbacks.debugger)
+	  {
+	    SAVE_CPU_STATE ();
+	    code = code_lookup( syn68k_debugger_callbacks.debugger(*(uint32_t*)code) );
+	    LOAD_CPU_STATE ();
+	  }
+	else
+	  {
+	    // We should never get here, (callbacks.getNextBreakpoint set
+	    // but callbacks.debugger cleared). But if we do, it's not a prolbem.
+	    code = code_lookup(*(uint32_t*)code);
+	  }
+	
+	CASE_POSTAMBLE (ROUND_UP (PTR_WORDS));
 	
       /* Reserved - skip stub NOP. */
       CASE (0x0003)

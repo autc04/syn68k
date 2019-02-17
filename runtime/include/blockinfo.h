@@ -2,12 +2,14 @@
 #define _blockinfo_h_
 
 #include "block.h"
+#include <stdbool.h>
 
 typedef struct {
   uint32 child[2];        /* m68k addresses of m68k code following this blk. */
   int16 num_child_blocks; /* # of child addrs we can know at translate time. */
   uint16 num_68k_instrs;
   int8 *next_instr_offset; /* word offset to next instr; 0 iff last instr.  */
+  bool break_at_end;
 } TempBlockInfo;
 
 extern void compute_block_info (Block *b, const uint16 *code,
