@@ -18,6 +18,8 @@
 #include <errno.h>
 #ifndef WIN32
 #include <unistd.h>
+#else
+#include <io.h>
 #endif
 
 static List *parse_expression (void);
