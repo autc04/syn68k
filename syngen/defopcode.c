@@ -268,7 +268,7 @@ done_generating_code ()
 void
 generate_opcode (ParsedOpcodeInfo *info, SymbolTable *sym)
 {
-#if	!defined(__GNUC__)
+#if	!defined(__GNUC__) && !defined(WIN32)
   extern void *alloca(int);
 #endif
   OperandInfo *operand_info;
