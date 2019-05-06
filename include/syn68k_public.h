@@ -207,11 +207,13 @@ extern DebuggerCallbacks syn68k_debugger_callbacks;
 
 #ifdef TWENTYFOUR_BIT_ADDRESSING
 #define ADDRESS_BITS 24
-# define CLEAN(addr) (((ptr_sized_uint)(addr)) & 0x00FFFFFFUL)
-
+//# define CLEAN(addr) (((ptr_sized_uint)(addr)) & 0x00FFFFFFUL)
+# define CLEAN(addr) ((ptr_sized_uint)(addr))
+#define ADDRESS_MASK 0x00FFFFFFU
 #else
 #define ADDRESS_BITS 32
 # define CLEAN(addr) ((ptr_sized_uint)(addr))
+#define ADDRESS_MASK 0xFFFFFFFFU
 #endif
 
 
@@ -249,8 +251,13 @@ extern uint32 ROMlib_offset;
  * Thus, we have ROMlib_offsets[] instead of ROMlib_offset, which is now defined
  * as an alias for ROMlib_offsets[0].
  */
+extern void* (*remapOutOfRangeAddressCallback)(void *p);
 
+#ifdef TWENTYFOUR_BIT_ADDRESSING
+#define OFFSET_TABLE_BITS 3
+#else
 #define OFFSET_TABLE_BITS 2
+#endif
 #define OFFSET_TABLE_SIZE (1 << OFFSET_TABLE_BITS)
 extern uint64 ROMlib_offsets[OFFSET_TABLE_SIZE];
 extern uint64 ROMlib_sizes[OFFSET_TABLE_SIZE];
@@ -259,7 +266,7 @@ extern uint64 ROMlib_sizes[OFFSET_TABLE_SIZE];
 
 static inline uint16* SYN68K_TO_US(uint32_t addr)
 {
-	return (uint16 *)((uint64)addr + ROMlib_offsets[CLEAN(addr) >> (ADDRESS_BITS - OFFSET_TABLE_BITS)]);
+	return (uint16 *)((uint64)(addr & ADDRESS_MASK) + ROMlib_offsets[(addr & ADDRESS_MASK) >> (ADDRESS_BITS - OFFSET_TABLE_BITS)]);
 }
 
 // TODO: inline something
