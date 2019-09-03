@@ -203,8 +203,6 @@ typedef struct {
 
 extern DebuggerCallbacks syn68k_debugger_callbacks;
 
-#define TWENTYFOUR_BIT_ADDRESSING
-
 #ifdef TWENTYFOUR_BIT_ADDRESSING
 #define ADDRESS_BITS 24
 //# define CLEAN(addr) (((ptr_sized_uint)(addr)) & 0x00FFFFFFUL)
