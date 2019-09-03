@@ -203,16 +203,15 @@ typedef struct {
 
 extern DebuggerCallbacks syn68k_debugger_callbacks;
 
-/* Address bits that have meaning, for the CLEAN() macro, below. */
-#define LEGAL_ADDRESS_BITS 0xFFFFFFFFUL
-
-/* Here is a macro to "clean" an address; if you make it mask out the
- * nasty bits, you risk a noticeable performance downgrade.
- */
-#if 1
+#ifdef TWENTYFOUR_BIT_ADDRESSING
+#define ADDRESS_BITS 24
+//# define CLEAN(addr) (((ptr_sized_uint)(addr)) & 0x00FFFFFFUL)
 # define CLEAN(addr) ((ptr_sized_uint)(addr))
+#define ADDRESS_MASK 0x00FFFFFFU
 #else
-# define CLEAN(addr) (((ptr_sized_uint)(addr)) & LEGAL_ADDRESS_BITS)
+#define ADDRESS_BITS 32
+# define CLEAN(addr) ((ptr_sized_uint)(addr))
+#define ADDRESS_MASK 0xFFFFFFFFU
 #endif
 
 
@@ -230,14 +229,13 @@ extern DebuggerCallbacks syn68k_debugger_callbacks;
 
 #endif
 
-
-#if SIZEOF_CHAR_P == 4
+#if SIZEOF_CHAR_P == 4 && !defined(TWENTYFOUR_BIT_ADDRESSING)
 
 extern uint32 ROMlib_offset;
 #define SYN68K_TO_US(addr) ((uint16 *) ((unsigned long)addr + ROMlib_offset)) /* uint16 * only the default. */
 #define US_TO_SYN68K(addr) (/*(syn68k_addr_t)*/(int32) (addr) - ROMlib_offset)
 
-#elif SIZEOF_CHAR_P == 8
+#else
 
 /**
  * Executor uses not only a contiguous allocated block of 68K memory,
@@ -251,8 +249,13 @@ extern uint32 ROMlib_offset;
  * Thus, we have ROMlib_offsets[] instead of ROMlib_offset, which is now defined
  * as an alias for ROMlib_offsets[0].
  */
+extern void* (*remapOutOfRangeAddressCallback)(void *p);
 
+#ifdef TWENTYFOUR_BIT_ADDRESSING
+#define OFFSET_TABLE_BITS 3
+#else
 #define OFFSET_TABLE_BITS 2
+#endif
 #define OFFSET_TABLE_SIZE (1 << OFFSET_TABLE_BITS)
 extern uint64 ROMlib_offsets[OFFSET_TABLE_SIZE];
 extern uint64 ROMlib_sizes[OFFSET_TABLE_SIZE];
@@ -261,15 +264,13 @@ extern uint64 ROMlib_sizes[OFFSET_TABLE_SIZE];
 
 static inline uint16* SYN68K_TO_US(uint32_t addr)
 {
-	return (uint16 *)((uint64)addr + ROMlib_offsets[addr >> (32 - OFFSET_TABLE_BITS)]);
+	return (uint16 *)((uint64)(addr & ADDRESS_MASK) + ROMlib_offsets[(addr & ADDRESS_MASK) >> (ADDRESS_BITS - OFFSET_TABLE_BITS)]);
 }
 
 // TODO: inline something
 #define US_TO_SYN68K(addr) (US_TO_SYN68K_FUN((uint64)(addr)))
 extern uint32_t US_TO_SYN68K_FUN(uint64 addr);
 
-#else
-#error "SIZEOF_CHAR_P unknown"
 #endif
 
      /* These macros should not be used within Syn68k, but are needed in
@@ -337,12 +338,12 @@ static inline uint32_t SWAPUL(uint32_t v)
    (uint32) ((_p[0] << 16) | _p[1]);               \
  })
 # define READUL_US(addr)			\
-({ const uint16 *_p = CLEAN (addr);		\
+({ const uint16 *_p = (addr);		\
    (uint32) ((_p[0] << 16) | _p[1]);		\
  })
 #elif defined (BIGENDIAN) && !defined (QUADALIGN)
 # define READUL(addr) (*(uint32 *) SYN68K_TO_US (CLEAN (addr)))
-# define READUL_US(addr) (*(uint32 *) CLEAN (addr))
+# define READUL_US(addr) (*(uint32 *) (addr))
 #elif !defined (BIGENDIAN) && defined (QUADALIGN)
 
 #if defined(__GNUC__)
@@ -351,7 +352,7 @@ static inline uint32_t SWAPUL(uint32_t v)
    (uint32) ((_p[0] << 24) | (_p[1] << 16) | (_p[2] << 8) | _p[3]); \
  })
 # define READUL_US(addr)						\
-({ const uint8 *_p = (const uint8 *) CLEAN (addr);			\
+({ const uint8 *_p = (const uint8 *) (addr);			\
    (uint32) ((_p[0] << 24) | (_p[1] << 16) | (_p[2] << 8) | _p[3]);	\
  })
 #else
@@ -368,7 +369,7 @@ static uint32 _readul_us(syn68k_addr_t addr)
 {
     const uint8 *p;
 
-    p = (const uint8 *) CLEAN (addr);
+    p = (const uint8 *) (addr);
     return (uint32) ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]);
 }
 
@@ -378,7 +379,7 @@ static uint32 _readul_us(syn68k_addr_t addr)
 
 #else /* !defined (BIGENDIAN) && !defined (QUADALIGN) */
 # define READUL(addr) SWAPUL (*(uint32 *) SYN68K_TO_US (CLEAN (addr)))
-# define READUL_US(addr) SWAPUL (*(uint32 *) CLEAN (addr))
+# define READUL_US(addr) SWAPUL (*(uint32 *) (addr))
 #endif
 #define READSB(addr) ((int8)  READUB (addr))
 #define READSW(addr) ((int16) READUW (addr))

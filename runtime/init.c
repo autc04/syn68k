@@ -22,7 +22,7 @@ CPUState cpu_state;
 uint32 ROMlib_offset;
 #else
 uint64 ROMlib_offsets[OFFSET_TABLE_SIZE];
-uint64 ROMlib_sizes[OFFSET_TABLE_SIZE] = {0x3FFFFFFF, 0x3FFFFFFF, 0x3FFFFFFF, 0x3FFFFFFF};
+uint64 ROMlib_sizes[OFFSET_TABLE_SIZE];
 #endif
 DebuggerCallbacks syn68k_debugger_callbacks = {0,0};
 
@@ -131,21 +131,23 @@ initialize_68k_emulator (void (*while_busy)(int), int native_p,
   range_tree_insert (b);
 }
 
-#if SIZEOF_CHAR_P > 4
+#if SIZEOF_CHAR_P > 4 || defined(TWENTYFOUR_BIT_ADDRESSING)
+void* (*remapOutOfRangeAddressCallback)(void *p) = 0;
+
 uint32_t US_TO_SYN68K_FUN(uint64 addr)
 {
   uint64 iaddr = (uint64) addr;
   for(uint32_t i = 0; i < OFFSET_TABLE_SIZE; i++)
   {
-    if(ROMlib_offsets[i] == 0)
-    {
-      ROMlib_offsets[i] = iaddr - 0x10000000 - (i << 30);
-      ROMlib_sizes[i] = 0x3FFFFFFF;
-      printf("Assigned address %lx to address space %x\n", (unsigned long) addr, (int) i);
-    }
-    uint64_t offset = ROMlib_offsets[i] + (i << 30);
+    uint64_t offset = ROMlib_offsets[i] + (i << (ADDRESS_BITS-OFFSET_TABLE_BITS));
     if(iaddr - offset <= ROMlib_sizes[i])
       return (iaddr - ROMlib_offsets[i]);
+  }
+  if(remapOutOfRangeAddressCallback)
+  {
+    addr = (uint64)remapOutOfRangeAddressCallback((void*)addr);
+    if(addr)
+      return US_TO_SYN68K_FUN(addr);
   }
   {
     printf("Could not convert address: %lx\n", (unsigned long) addr);

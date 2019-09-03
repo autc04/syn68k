@@ -10,8 +10,14 @@ if(MSVC)
 		/we4311 /we4312)
 endif()
 
+option(TWENTYFOUR "Use twenty-four bit addressing")
+
 add_library(syn68k-common INTERFACE)
 target_include_directories(syn68k-common INTERFACE include)
+
+if(TWENTYFOUR)
+	target_compile_definitions(syn68k-common INTERFACE TWENTYFOUR_BIT_ADDRESSING)
+endif()
 
 add_custom_target(syn68k-common-headers SOURCES
     include/syn68k_private.h
