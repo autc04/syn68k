@@ -18,7 +18,8 @@ extern "C"
 #  define BIGENDIAN  /* ARDI naming convention, why rock the boat? */
 # elif defined(__alpha) || defined(i860) || defined(vax) || defined(i386) \
      || defined(__x86_64) || defined(__x86_64__) \
-     || defined (_M_X64) || defined(_M_IX86)
+     || defined (_M_X64) || defined(_M_IX86) \
+     || defined(__arm__)
 #  define LITTLEENDIAN
 # else
 #  error "Unknown CPU type"
@@ -43,7 +44,7 @@ extern "C"
        && !defined(vax) && !defined(__alpha) && !defined(powerpc) \
        && !defined (__ppc__) && !defined(__x86_64) \
        && !defined(__x86_64) && !defined(__x86_64__) \
-       && !defined (_M_X64) && !defined(_M_IX86)
+       && !defined (_M_X64) && !defined(_M_IX86) && !defined(__arm__)
 
 #  error Unknown CPU type
 # endif
