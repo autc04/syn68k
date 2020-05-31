@@ -536,7 +536,6 @@ string_to_list (const char *string, const char *include_dirs[])
   Token t;
   char buf[256];
   static int busy_p = FALSE;
-  int fd;
 
   assert (!busy_p);
   busy_p = TRUE;
@@ -552,7 +551,7 @@ string_to_list (const char *string, const char *include_dirs[])
 
 #else
   char filename[32] = "/tmp/syngenXXXXXX";
-  fd = mkstemp (filename);
+  int fd = mkstemp (filename);
   temp = fd ? fdopen (fd, "w") : NULL;
 #endif
   if (temp == NULL)
