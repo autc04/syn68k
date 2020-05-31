@@ -8,6 +8,11 @@
  * difference, respectively.
  */
 
+#ifdef _MSC_VER
+    // MSVC won't understand the syntax.
+    // Clang on Windows complains that it doesn't have enough free registers.
+#define NO_FAST_CC_FUNCS
+#endif
 
 #if defined (i386) && !defined (NO_FAST_CC_FUNCS)
 
