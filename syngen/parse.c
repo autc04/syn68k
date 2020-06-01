@@ -541,14 +541,10 @@ string_to_list (const char *string, const char *include_dirs[])
   busy_p = TRUE;
 
   /* POOR IMPLEMENTATION - creates temp file to get a FILE * ! */
-#if 0
-  /* Loses mysteriously under linux.  Be totally paranoid now. */
-  temp = tmpfile ();
-#elif defined(_MSC_VER)
+#if defined(_WIN32)
   char filename[32] = "syngenXXXXXX";
-  _mktemp(filename);
+  mktemp(filename);
   temp = fopen(filename, "w");
-
 #else
   char filename[32] = "/tmp/syngenXXXXXX";
   int fd = mkstemp (filename);
