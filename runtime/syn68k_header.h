@@ -173,13 +173,16 @@ static void next_instruction_hook(const void *vp)
   NEXT_INSTRUCTION_HOOK(words_to_inc);	 \
   next_code = *(void **)(code + (words_to_inc) - PTR_WORDS); \
   INCREMENT_CODE (words_to_inc); \
+  if (track_pc_local) \
+    syn68k_current_code = code; \
   goto *next_code; \
 }
 
 # define CASE_POSTAMBLE(words_to_inc) } NEXT_INSTRUCTION (words_to_inc); }
 #else
 # define CASE(n) case n:
-# define NEXT_INSTRUCTION(words_to_inc) { INCREMENT_CODE (words_to_inc); break; }
+# define NEXT_INSTRUCTION(words_to_inc) \
+{ INCREMENT_CODE (words_to_inc); if (track_pc_local) syn68k_current_code = code; break; }
 # define CASE_PREAMBLE(name,bits,ms,mns,n) {
 # define CASE_POSTAMBLE(words_to_inc) } NEXT_INSTRUCTION (words_to_inc);
 #endif
@@ -408,6 +411,9 @@ interpret_code1 (const uint16 *code, CPUState *cpu_state_ptr, const void ***out_
 
   /* Grab all information from the CPUState. */
   LOAD_CPU_STATE ();
+  /* Snapshot the tracking flag once: it never changes while we run, and this
+   * keeps the (disabled) tracking check off the global-load path. */
+  int track_pc_local = syn68k_track_pc;
   /* Skip over various hacks. */
   goto main_loop;
 
@@ -501,6 +507,8 @@ main_loop:
   NEXT_INSTRUCTION (ROUND_UP (PTR_WORDS));
 #else
   INCREMENT_CODE(PTR_WORDS);
+  if (track_pc_local)
+    syn68k_current_code = code;
 
   while (1)
     {

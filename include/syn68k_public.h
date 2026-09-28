@@ -205,6 +205,24 @@ typedef struct {
 
 extern DebuggerCallbacks syn68k_debugger_callbacks;
 
+/*
+ * Guest-PC tracking for fault diagnostics.
+ *
+ * When `syn68k_track_pc` is non-zero the interpreter records the synthetic
+ * code pointer of the instruction currently executing in `syn68k_current_code`.
+ * `syn68k_current_pc()` maps that pointer back to the guest (68K) address of
+ * the instruction.  This is only meaningful while emulated code is running
+ * (e.g. from a SIGSEGV handler) and is off by default because it costs a global
+ * store per translated instruction.
+ */
+extern int syn68k_track_pc;
+extern const uint16 *syn68k_current_code;
+syn68k_addr_t syn68k_current_pc(void);
+
+/* Non-zero while the interpreter is executing guest code (nested calls
+ * included).  Useful to decide whether a host fault originated in the guest. */
+extern int emulation_depth;
+
 #ifdef TWENTYFOUR_BIT_ADDRESSING
 #define ADDRESS_BITS 24
 //# define CLEAN(addr) (((ptr_sized_uint)(addr)) & 0x00FFFFFFUL)

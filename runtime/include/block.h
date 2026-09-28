@@ -37,6 +37,15 @@ struct _Block {
   uint16 malloc_code_offset:3;      /* Pass compiled_code - this to free().  */
   uint16 num_parents       :13;     /* # of blocks that feed into this one.  */
   backpatch_t *backpatch;           /* Linked list of backpatches to apply.  */
+
+  /* Debug aid (see syn68k_current_pc()): per-instruction map from synthetic
+   * code offset (in uint16 units, relative to compiled_code) to the guest
+   * address of the corresponding 68K instruction.  Only populated when
+   * syn68k_track_pc is set at translation time; otherwise both arrays are NULL
+   * and pc_map_count is 0. */
+  uint32 *pc_map_offset;
+  uint32 *pc_map_addr;
+  uint32 pc_map_count;
 #ifdef DEBUG                        /*  to ptr to the specified child block. */
   uint32 magic;
 #endif

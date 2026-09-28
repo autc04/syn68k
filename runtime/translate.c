@@ -237,6 +237,8 @@ generate_code (Block *b, TempBlockInfo *tbi, BOOL try_native_p)
   MapAndCC *map_and_cc;
   unsigned long max_code_bytes, num_code_bytes;
   uint32 instr_code[256];  /* Space for one instruction. */
+  uint32 *pc_map_offset = NULL;
+  uint32 *pc_map_addr = NULL;
 #ifdef GENERATE_NATIVE_CODE
   cache_info_t cache_info;
   BOOL prev_native_p;
@@ -265,6 +267,14 @@ generate_code (Block *b, TempBlockInfo *tbi, BOOL try_native_p)
   max_code_bytes = (tbi->num_68k_instrs * 32 + 512);
   code = (uint8 *) xmalloc (PTR_BYTES + max_code_bytes) + PTR_BYTES;
   num_code_bytes = 0;
+
+  /* If requested, remember where each instruction's synthetic code starts so
+   * that syn68k_current_pc() can map a faulting code pointer to a guest PC. */
+  if (syn68k_track_pc && tbi->num_68k_instrs > 0)
+    {
+      pc_map_offset = (uint32 *) xmalloc (tbi->num_68k_instrs * sizeof (uint32));
+      pc_map_addr = (uint32 *) xmalloc (tbi->num_68k_instrs * sizeof (uint32));
+    }
 
   /* Start with no backpatches. */
   b->backpatch = NULL;
@@ -328,6 +338,17 @@ generate_code (Block *b, TempBlockInfo *tbi, BOOL try_native_p)
       int j, main_size;
       int32 backpatch_request_index;
       const OpcodeMappingInfo *map = map_and_cc[i].map;
+
+      /* Record the synthetic offset and guest address of this instruction.  The
+       * interpreter's `code` pointer at the first synthetic opcode of an
+       * instruction points just past that opcode word, i.e. at offset
+       * num_code_bytes/2 + PTR_WORDS. */
+      if (pc_map_offset != NULL)
+	{
+	  pc_map_offset[i] = (uint32) (num_code_bytes / sizeof (uint16))
+	                     + PTR_WORDS;
+	  pc_map_addr[i] = US_TO_SYN68K (m68k_code);
+	}
 #ifdef GENERATE_NATIVE_CODE
       BOOL native_p = FALSE;
       backpatch_t *old_backpatch, *native_backpatch;
@@ -538,8 +559,12 @@ generate_code (Block *b, TempBlockInfo *tbi, BOOL try_native_p)
    */
   b->compiled_code = (((uint16 *) xrealloc (code - PTR_BYTES,
 					    PTR_BYTES + num_code_bytes))
-		      + PTR_WORDS);
+			      + PTR_WORDS);
   b->malloc_code_offset = PTR_WORDS;
+
+  b->pc_map_offset = pc_map_offset;
+  b->pc_map_addr = pc_map_addr;
+  b->pc_map_count = (pc_map_offset != NULL) ? (uint32) tbi->num_68k_instrs : 0;
 
   WRITE_LONG (&b->compiled_code[-PTR_WORDS], b->m68k_start_address);
 

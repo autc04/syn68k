@@ -11,6 +11,62 @@
 
 static Block *free_blocks = NULL;
 
+/* Guest-PC tracking; see syn68k_public.h. */
+int syn68k_track_pc = 0;
+const uint16 *syn68k_current_code = NULL;
+
+
+/* Map the most recently recorded synthetic code pointer back to the guest
+ * address of the 68K instruction being executed.  Intended to be called from a
+ * fault handler, so it is deliberately simple and does no allocation.  Returns
+ * 0 if the mapping is unknown (tracking disabled, or code pointer not found).
+ */
+syn68k_addr_t
+syn68k_current_pc (void)
+{
+  const uint16 *code;
+  Block *b, *best;
+  uint32 off, lo, hi;
+
+  if (!syn68k_track_pc)
+    return 0;
+
+  code = syn68k_current_code;
+  if (code == NULL)
+    return 0;
+
+  /* Find the block whose compiled code contains the recorded pointer.  There
+   * is exactly one such block; the greatest compiled_code <= code is it.
+   */
+  best = NULL;
+  for (b = death_queue_head; b != NULL; b = b->death_queue_next)
+    if (b->compiled_code != NULL && b->pc_map_count > 0
+	&& b->compiled_code <= code
+	&& (best == NULL || b->compiled_code > best->compiled_code))
+      best = b;
+
+  if (best == NULL)
+    return 0;
+
+  off = (uint32) (code - best->compiled_code);
+
+  /* Binary search for the greatest entry whose offset <= off. */
+  lo = 0;
+  hi = best->pc_map_count;
+  while (lo < hi)
+    {
+      uint32 mid = lo + (hi - lo) / 2;
+      if (best->pc_map_offset[mid] <= off)
+	lo = mid + 1;
+      else
+	hi = mid;
+    }
+
+  if (lo == 0)
+    return best->m68k_start_address;
+  return best->pc_map_addr[lo - 1];
+}
+
 
 /* Returns a new, empty Block.  All fields of the block are initialized to
  * zero.  If DEBUG is #define'd, the magic field will be set to
@@ -58,6 +114,11 @@ block_free (Block *b)
   free (b->parent);
   if (b->compiled_code != NULL)  /* Avoid freeing -2 or anything. */
     free ((void *) (b->compiled_code - b->malloc_code_offset));
+  free (b->pc_map_offset);
+  free (b->pc_map_addr);
+  b->pc_map_offset = NULL;
+  b->pc_map_addr = NULL;
+  b->pc_map_count = 0;
 
   /* Prepend this block to the linked list of free ones. */
   b->child[0] = free_blocks;
